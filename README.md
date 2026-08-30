@@ -9,7 +9,7 @@ folder.
 MIT licensed · [privacy policy](PRIVACY.md) · landing page in [`docs/`](docs/)
 
 > **Support:** GemFetch is free and open source. If it helps you,
-> [donate via PayPal](https://paypal.me/YOUR-HANDLE-HERE).
+> [donate via PayPal](https://paypal.me/afulciniti95).
 
 ## Output
 
