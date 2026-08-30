@@ -116,7 +116,7 @@ See [`STORE_LISTING.md`](STORE_LISTING.md) for the Chrome Web Store draft and th
 pre-submit checklist (icons, versioning, hosted privacy policy). The landing page
 under [`docs/`](docs/) is ready for GitHub Pages — enable it at
 **Settings → Pages → Source: `main` / `docs`**, then it serves at
-`https://alematic.github.io/gemfetch/`.
+`https://alematic.github.io/GemFetch/`.
 
 Before going fully public, update the `#install` link in `docs/index.html`
 (and the `STORE_LISTING.md` privacy-policy URL) to the Chrome Web Store URL

@@ -54,15 +54,14 @@ free tier is rate-limited; heavy users can enable billing on their own key.
 - **Remote code:** No.
 - **Data collected / sold / transferred:** None by the developer. Page text is
   sent to Google's API under the user's own key; nothing is sent to the developer.
-- **Privacy policy URL:** TODO — `https://alematic.github.io/gemfetch/privacy.html`
+- **Privacy policy URL:** TODO — `https://alematic.github.io/GemFetch/privacy.html`
   (or link the repo's PRIVACY.md raw URL).
 
 ---
 
 ## Assets to prepare
 
-- **Icon:** 128×128 PNG. (Add `icons/` to the extension and reference in
-  `manifest.json` before submitting — currently unset.)
+- **Icon:** done — `icons/icon128.png` (also 16/32/48), wired into `manifest.json`.
 - **Screenshots:** 1280×800 or 640×400 PNG, at least one. Suggested shots:
   1. The popup on a Google AI Mode page showing the editable Title + Synthesis.
   2. A saved `.md` open in an editor.
@@ -71,8 +70,7 @@ free tier is rate-limited; heavy users can enable billing on their own key.
 
 ## Before submitting — code checklist
 
-- [ ] Add an `icons/` set (16/32/48/128) and wire into `manifest.json`
-      (`action.default_icon` + top-level `icons`).
+- [x] Icons set (16/32/48/128) wired into `manifest.json`.
 - [ ] Bump `version` in `manifest.json` for each upload.
 - [ ] Host the privacy policy at a public URL.
 - [ ] Test on a fresh Chrome profile (no cached permissions).
