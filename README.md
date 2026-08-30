@@ -9,7 +9,7 @@ folder.
 MIT licensed · [privacy policy](PRIVACY.md) · landing page in [`docs/`](docs/)
 
 > **Support:** GemFetch is free and open source. If it helps you,
-> [donate via PayPal](https://paypal.me/YOURNAME) &nbsp;*(replace `YOURNAME`)*.
+> [donate via PayPal](https://paypal.me/AlessandroFulciniti).
 
 ## Output
 
@@ -71,11 +71,11 @@ Each user brings their own **free** Google AI Studio key (`aistudio.google.com/a
 The key is stored locally in that user's browser only.
 
 The free tier is rate-limited **per model** (requests per minute and per day).
-GemFetch defaults to **Gemini 2.0 Flash**, which has the most generous free
-allowance (~200 requests/day). If you see `429` errors:
+Pick a **"flash"** model in Settings (Refresh loads what your key can use) —
+they have the most generous free allowance. If you see `429` errors:
 
 - Wait a minute (GemFetch auto-retries once) — per-minute limits reset fast.
-- Stay on Gemini 2.0 Flash; the newer models have much smaller free quotas.
+- Prefer a lighter "flash" model; "pro" and newest-preview models have much smaller free quotas.
 - For heavy use, enable **billing** on the key's Google Cloud project
   (console.cloud.google.com → Billing). A consumer *Gemini Advanced / Pro*
   subscription does **not** raise API limits — only Cloud billing does.
@@ -101,10 +101,9 @@ under [`docs/`](docs/) is ready for GitHub Pages — enable it at
 **Settings → Pages → Source: `main` / `docs`**, then it serves at
 `https://alematic.github.io/gemfetch/`.
 
-Before going public, replace the placeholders:
-
-- `YOURNAME` in `docs/index.html` and `README.md` → your `paypal.me` handle.
-- The `#install` link in `docs/index.html` → the Web Store URL once live.
+Before going fully public, update the `#install` link in `docs/index.html`
+(and the `STORE_LISTING.md` privacy-policy URL) to the Chrome Web Store URL
+once the listing is live.
 
 ## Contributing
 
