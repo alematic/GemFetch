@@ -87,8 +87,8 @@ KEEP:
 
 Return JSON with:
 - "title": a concise, specific, descriptive title (max ~12 words, no surrounding quotes, no trailing punctuation).
-- "synthesis": 3-8 short bullet strings — the key takeaways / answers.
-- "conversation": the cleaned answer as tight, readable Markdown. If distinct prompt/response turns exist, format each as "### Prompt" then "### Response". No preamble, no closing remarks.`;
+- "synthesis": 3-7 bullet points. Each is a TERSE FRAGMENT, not a full sentence — aim for 12 words or fewer. Drop lead-ins like "The item is", "It is", "This means"; drop articles where readable. Lead with the fact, number, or name. Good: "Used value roughly $20-50 USD (~17-43 CHF)". Bad: "The used market value for fully functional units generally ranges between $20 and $50 USD."
+- "conversation": the cleaned answer as tight, readable Markdown — cut filler and hedging hard. If distinct prompt/response turns exist, format each as "### Prompt" then "### Response". No preamble, no closing remarks.`;
 
 async function synthesize(apiKey, model, data) {
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -99,6 +99,7 @@ async function synthesize(apiKey, model, data) {
           {
             text:
               PROMPT +
+              (CFG.customPrompt ? `\n\nAdditional instructions from the user (obey these):\n${CFG.customPrompt}` : "") +
               `\n\nUser's search query: ${data.query || "(unknown)"}\n\nRaw text:\n"""\n` +
               (data.markdown || "").slice(0, 60000) +
               `\n"""`,
@@ -349,7 +350,7 @@ async function afterPermission() {
 
 async function init() {
   CFG = await chrome.storage.local.get([
-    "apiKey", "model", "useGroups", "defaultGroup", "archiveGroup",
+    "apiKey", "model", "customPrompt", "useGroups", "defaultGroup", "archiveGroup",
   ]);
   ROOT = await idbGet("dirHandle");
   saveEl.addEventListener("click", doSave);
