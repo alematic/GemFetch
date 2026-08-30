@@ -87,7 +87,7 @@ KEEP:
 
 Return JSON with:
 - "title": a concise, specific, descriptive title (max ~12 words, no surrounding quotes, no trailing punctuation).
-- "synthesis": 3-7 bullet points. Each is a TERSE FRAGMENT, not a full sentence — aim for 12 words or fewer. Drop lead-ins like "The item is", "It is", "This means"; drop articles where readable. Lead with the fact, number, or name. Good: "Used value roughly $20-50 USD (~17-43 CHF)". Bad: "The used market value for fully functional units generally ranges between $20 and $50 USD."
+- "synthesis": 3-7 bullet points. Each is a TERSE FRAGMENT, not a full sentence — aim for 12 words or fewer. Drop lead-ins like "The item is", "It is", "This means"; drop articles where readable. Lead with the fact, number, or name. Good: "Used value roughly $20-50 USD (~17-43 CHF)". Bad: "The used market value for fully functional units generally ranges between $20 and $50 USD.". The bulletpoints are to be written with "-" a dash. f
 - "conversation": the cleaned answer as tight, readable Markdown — cut filler and hedging hard. If distinct prompt/response turns exist, format each as "### Prompt" then "### Response". No preamble, no closing remarks.`;
 
 async function synthesize(apiKey, model, data) {
@@ -218,7 +218,22 @@ async function renderRecent() {
         log("Move failed: " + e.message, "err");
       }
     });
-    row.append(name, sel, btn);
+    const openBtn = document.createElement("button");
+    openBtn.textContent = "Open";
+    openBtn.title = CFG.folderPath
+      ? "Open the containing folder in a tab"
+      : "Set the working-folder path in Settings to enable";
+    openBtn.addEventListener("click", () => {
+      if (!CFG.folderPath) {
+        log("Add the working folder's full path in Settings to enable Open.", "warn");
+        return;
+      }
+      const base = CFG.folderPath.replace(/\\/g, "/").replace(/\/+$/, "");
+      const rel = r.group ? "/" + encodeURIComponent(r.group) : "";
+      chrome.tabs.create({ url: `file:///${base}${rel}/` });
+    });
+
+    row.append(name, sel, btn, openBtn);
     recentEl.appendChild(row);
   });
 }
@@ -350,7 +365,8 @@ async function afterPermission() {
 
 async function init() {
   CFG = await chrome.storage.local.get([
-    "apiKey", "model", "customPrompt", "useGroups", "defaultGroup", "archiveGroup",
+    "apiKey", "model", "customPrompt", "folderPath",
+    "useGroups", "defaultGroup", "archiveGroup",
   ]);
   ROOT = await idbGet("dirHandle");
   saveEl.addEventListener("click", doSave);

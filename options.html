@@ -59,6 +59,15 @@
     <span id="folder" class="muted">none selected</span>
   </div>
 
+  <label for="folderPath">Working folder — full path (optional)</label>
+  <input id="folderPath" type="text" placeholder="C:\Users\you\Downloads\GeminiChatsMDs" />
+  <div class="muted">
+    Enables the <b>Open</b> button in the popup (opens the folder in a browser tab).
+    Chrome can't launch Explorer, and it can't read the real path itself, so paste it here once.
+    You must also enable <b>“Allow access to file URLs”</b> on this extension's
+    <code>chrome://extensions</code> details page.
+  </div>
+
   <p><button id="save">Save settings</button> <span id="status" class="ok"></span></p>
 
   <script src="shared.js"></script>

@@ -17,11 +17,12 @@ function fillModels(list, selected) {
 
 async function load() {
   const cfg = await chrome.storage.local.get([
-    "apiKey", "model", "modelList", "folderName", "customPrompt",
+    "apiKey", "model", "modelList", "folderName", "customPrompt", "folderPath",
     "useGroups", "defaultGroup", "archiveGroup",
   ]);
   $("key").value = cfg.apiKey || "";
   $("customPrompt").value = cfg.customPrompt || "";
+  $("folderPath").value = cfg.folderPath || "";
   $("useGroups").checked = !!cfg.useGroups;
   $("defaultGroup").value = cfg.defaultGroup || "Inbox";
   $("archiveGroup").value = cfg.archiveGroup || "Archive";
@@ -63,6 +64,7 @@ $("save").addEventListener("click", async () => {
   await chrome.storage.local.set({
     apiKey: $("key").value.trim(),
     customPrompt: $("customPrompt").value.trim(),
+    folderPath: $("folderPath").value.trim(),
     model: $("model").value || "",
     useGroups: $("useGroups").checked,
     defaultGroup: $("defaultGroup").value.trim() || "Inbox",
