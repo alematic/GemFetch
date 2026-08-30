@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GemFetch — Privacy Policy</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%8E%3C/text%3E%3C/svg%3E" />
+<style>
+  :root { --bg:#fff; --fg:#1b1b1f; --muted:#5b5b66; --card:#f5f5f7; --border:#e2e2e8; --accent:#2f6df6; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#101014; --fg:#e9e9ee; --muted:#a2a2ad; --card:#17171d; --border:#2a2a33; --accent:#5b8dff; }
+  }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.65 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:48px 20px 80px; }
+  h1 { letter-spacing:-.02em; } h2 { margin-top:36px; }
+  a { color:var(--accent); }
+  table { border-collapse:collapse; width:100%; margin:12px 0; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  code { background:var(--card); padding:1px 5px; border-radius:5px; font-size:.9em; }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+<h1>GemFetch — Privacy Policy</h1>
+<p class="muted">Last updated: 2026-08-30</p>
+
+<p>GemFetch is a browser extension that saves a Google AI Overview / AI Mode
+answer as a Markdown file on your computer.</p>
+
+<h2>What GemFetch handles</h2>
+<ul>
+  <li><strong>Page content</strong> — when you click the toolbar button, GemFetch reads the text of the Google results page you are on, to extract the answer.</li>
+  <li><strong>Your API key</strong> — a Google AI Studio key you enter in settings.</li>
+  <li><strong>Your settings</strong> — model, working-folder name/path, group names, extra instructions, and a short list of recent saves.</li>
+</ul>
+
+<h2>Where it goes</h2>
+<ul>
+  <li><strong>Stays on your device:</strong> API key, settings, recent-saves list (<code>chrome.storage.local</code>), folder handle (<code>IndexedDB</code>). Never sent to the author or any third party.</li>
+  <li><strong>Sent to Google:</strong> the scraped page text and your query go to <code>generativelanguage.googleapis.com</code> using <em>your</em> key, only to generate the title, synthesis and transcript. Governed by <a href="https://ai.google.dev/gemini-api/terms">Google's API terms</a>.</li>
+  <li><strong>Written to disk:</strong> the Markdown file goes only to the folder you selected.</li>
+</ul>
+
+<h2>What GemFetch does not do</h2>
+<ul>
+  <li>No analytics, telemetry, tracking or advertising.</li>
+  <li>No remote code loading.</li>
+  <li>No developer-operated servers — there is no backend.</li>
+  <li>No access to browsing history, other tabs, cookies or passwords.</li>
+</ul>
+
+<h2>Permissions</h2>
+<table>
+  <tr><th>Permission</th><th>Reason</th></tr>
+  <tr><td><code>activeTab</code> + <code>scripting</code></td><td>Read the current Google page's text when you click the button.</td></tr>
+  <tr><td><code>storage</code></td><td>Save settings and the recent-saves list locally.</td></tr>
+  <tr><td><code>tabs</code>, <code>tabGroups</code></td><td>Read the active tab's tab-group name for foldering; open the working folder in a tab.</td></tr>
+  <tr><td>host <code>generativelanguage.googleapis.com</code></td><td>Call the Gemini API with your key.</td></tr>
+</table>
+
+<h2>Contact</h2>
+<p>Open an issue at <a href="https://github.com/alematic/gemfetch">github.com/alematic/gemfetch</a>.</p>
+</main>
+</body>
+</html>

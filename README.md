@@ -1,10 +1,15 @@
-# GemFetch
+# 💎 GemFetch
 
 A tiny Chrome (Manifest V3) extension. Click the icon on a Google search page and
 it fetches the **AI Overview** / **AI Mode** answer, cleans it up with Gemini
 (strips buttons, follow-up chips, disclaimers, filler), and — after you eyeball
 the title and bullet synthesis — saves it as a Markdown file in your working
 folder.
+
+MIT licensed · [privacy policy](PRIVACY.md) · landing page in [`docs/`](docs/)
+
+> **Support:** GemFetch is free and open source. If it helps you,
+> [donate via PayPal](https://paypal.me/YOURNAME) &nbsp;*(replace `YOURNAME`)*.
 
 ## Output
 
@@ -17,13 +22,12 @@ folder.
 title: "Understanding GC-MS calibration curves"
 source: AI Mode
 query: "how to build a gc-ms calibration curve"
-url: https://www.google.com/search?...
 saved: 2026-08-30T14:32:01.000Z
 ---
 
 # Understanding GC-MS calibration curves
 
-[Open this chat](https://www.google.com/search?...)
+[↗ Open this chat in your browser](https://www.google.com/search?...)
 
 ## Synthesis
 - ...
@@ -88,3 +92,25 @@ enters their own key in Settings. No shared server, no shared quota.
   request is the cleanup/summary call to Google's Generative Language API.
 - If that call fails, the popup says so and still lets you save the raw text.
 - Uses `activeTab` → works on any `www.google.*` domain, no host list.
+
+## Publishing
+
+See [`STORE_LISTING.md`](STORE_LISTING.md) for the Chrome Web Store draft and the
+pre-submit checklist (icons, versioning, hosted privacy policy). The landing page
+under [`docs/`](docs/) is ready for GitHub Pages — enable it at
+**Settings → Pages → Source: `main` / `docs`**, then it serves at
+`https://alematic.github.io/gemfetch/`.
+
+Before going public, replace the placeholders:
+
+- `YOURNAME` in `docs/index.html` and `README.md` → your `paypal.me` handle.
+- The `#install` link in `docs/index.html` → the Web Store URL once live.
+
+## Contributing
+
+Plain HTML/JS, no build step. Edit files, then reload the extension at
+`chrome://extensions`. `node -c *.js` for a quick syntax check.
+
+## License
+
+[MIT](LICENSE).

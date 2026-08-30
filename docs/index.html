@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GemFetch — save Google AI answers as Markdown</title>
+<meta name="description" content="One click saves a Google AI Overview / AI Mode answer as a clean Markdown note: AI title, bullet synthesis, tidy transcript, in a folder you choose." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%8E%3C/text%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1b1b1f; --muted: #5b5b66; --card: #f5f5f7;
+    --border: #e2e2e8; --accent: #2f6df6; --accent-fg: #ffffff; --code: #ececf1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101014; --fg: #e9e9ee; --muted: #a2a2ad; --card: #17171d;
+      --border: #2a2a33; --accent: #5b8dff; --accent-fg: #0a0a0c; --code: #1e1e26;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.65 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+  header { text-align: center; padding: 64px 20px 40px; }
+  h1 { font-size: 2.6rem; margin: 0 0 .2em; letter-spacing: -0.02em; }
+  .tag { font-size: 1.2rem; color: var(--muted); margin: 0 auto; max-width: 34ch; }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+  .btn {
+    display: inline-block; padding: 11px 20px; border-radius: 9px;
+    text-decoration: none; font-weight: 600; border: 1px solid var(--border);
+    color: var(--fg); background: var(--card);
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+  h2 { font-size: 1.4rem; margin: 48px 0 12px; letter-spacing: -0.01em; }
+  ul { padding-left: 1.2em; }
+  li { margin: .35em 0; }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps li { counter-increment: s; position: relative; padding-left: 2.2em; margin: .6em 0; }
+  .steps li::before {
+    content: counter(s); position: absolute; left: 0; top: .05em;
+    width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--accent);
+    color: var(--accent-fg); font-size: .8rem; font-weight: 700;
+    display: grid; place-items: center;
+  }
+  code { background: var(--code); padding: 1px 6px; border-radius: 5px; font-size: .9em; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 4px 20px; }
+  .donate { text-align: center; margin: 56px 0 8px; }
+  footer { text-align: center; color: var(--muted); font-size: .9rem; padding: 40px 20px 60px; }
+  footer a { color: var(--muted); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>💎 GemFetch</h1>
+    <p class="tag">Save a Google AI answer as a clean Markdown note — in one click.</p>
+    <div class="cta">
+      <!-- TODO: replace with the Chrome Web Store URL once published -->
+      <a class="btn primary" href="#install">Get the extension</a>
+      <a class="btn" href="https://github.com/alematic/gemfetch">View source</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <h2>What it does</h2>
+  <ul>
+    <li>Reads the <strong>AI Overview</strong> box or <strong>AI Mode</strong> conversation on a Google search page.</li>
+    <li>Uses the Gemini API (your own free key) to write a <strong>title</strong>, a <strong>bullet-point synthesis</strong>, and a tidy transcript — stripping buttons, follow-up chips, disclaimers and filler.</li>
+    <li>Writes it to a folder you choose as <code>YYMMDD-title.md</code>, with the source link inside.</li>
+    <li>Optional: file each note into a subfolder named after the current Chrome <strong>tab group</strong>, and move notes into an <strong>Archive</strong>.</li>
+  </ul>
+
+  <h2>Private by design</h2>
+  <div class="card">
+    <p>Your API key and settings never leave your browser. The only network request
+    is the summarization call to Google, made with <em>your</em> key. No analytics,
+    no servers, no tracking. <a href="privacy.html">Full privacy policy →</a></p>
+  </div>
+
+  <h2 id="install">Install</h2>
+  <p>Until it's on the Chrome Web Store, load it unpacked:</p>
+  <ol class="steps">
+    <li>Download or clone <a href="https://github.com/alematic/gemfetch">the repository</a>.</li>
+    <li>Open <code>chrome://extensions</code> and turn on <strong>Developer mode</strong>.</li>
+    <li><strong>Load unpacked</strong> → pick the <code>gemfetch</code> folder.</li>
+    <li>Open the extension's <strong>options</strong>: paste a free
+      <a href="https://aistudio.google.com/apikey">Google AI Studio API key</a>,
+      click <strong>Refresh</strong> to pick a model, and choose your working folder.</li>
+    <li>Pin the icon. On any Google search with AI Mode / AI Overview, click it.</li>
+  </ol>
+
+  <h2>Notes</h2>
+  <ul>
+    <li>The free Gemini tier is rate-limited per day. Heavy users can enable billing on their own key (a consumer "Gemini" subscription does not raise API limits).</li>
+    <li>Google's markup shifts often; if the scrape misses content, select the answer text on the page first, then click.</li>
+  </ul>
+
+  <div class="donate">
+    <h2>Support</h2>
+    <p>GemFetch is free and open source. If it saves you time:</p>
+    <!-- TODO: replace YOURNAME with your paypal.me handle -->
+    <a class="btn primary" href="https://paypal.me/YOURNAME">Donate via PayPal</a>
+  </div>
+</main>
+
+<footer>
+  MIT licensed · <a href="https://github.com/alematic/gemfetch">github.com/alematic/gemfetch</a><br />
+  Not affiliated with Google. "Gemini" is a trademark of Google LLC.
+</footer>
+</body>
+</html>
