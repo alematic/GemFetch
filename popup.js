@@ -278,7 +278,7 @@ async function prepare() {
     log("Summarizing…");
     let out, warn = "";
     try {
-      out = await synthesize(CFG.apiKey, CFG.model || "gemini-2.5-flash", data);
+      out = await synthesize(CFG.apiKey, CFG.model || "gemini-flash-latest", data);
     } catch (e) {
       warn = "AI summary failed (" + e.message + "). You can still save the raw text.";
       out = { title: data.query || "Gemini chat", synthesis: [], conversation: data.markdown };

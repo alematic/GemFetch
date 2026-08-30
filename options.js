@@ -1,10 +1,11 @@
 const $ = (id) => document.getElementById(id);
 
+const DEFAULT_MODEL = "gemini-flash-latest";
 const FALLBACK_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-pro",
-  "gemini-2.0-flash",
   "gemini-flash-latest",
+  "gemini-pro-latest",
+  "gemini-2.0-flash",
+  "gemini-2.5-flash",
 ];
 
 function fillModels(list, selected) {
@@ -47,7 +48,7 @@ async function load() {
   $("defaultGroup").value = cfg.defaultGroup || "Inbox";
   $("archiveGroup").value = cfg.archiveGroup || "Archive";
   $("folder").textContent = cfg.folderName ? `✓ ${cfg.folderName}` : "none selected";
-  fillModels(cfg.modelList && cfg.modelList.length ? cfg.modelList : FALLBACK_MODELS, cfg.model || "gemini-2.5-flash");
+  fillModels(cfg.modelList && cfg.modelList.length ? cfg.modelList : FALLBACK_MODELS, cfg.model || DEFAULT_MODEL);
 }
 
 $("refresh").addEventListener("click", async () => {
@@ -80,7 +81,7 @@ $("pick").addEventListener("click", async () => {
 $("save").addEventListener("click", async () => {
   await chrome.storage.local.set({
     apiKey: $("key").value.trim(),
-    model: $("model").value || "gemini-2.5-flash",
+    model: $("model").value || DEFAULT_MODEL,
     useGroups: $("useGroups").checked,
     defaultGroup: $("defaultGroup").value.trim() || "Inbox",
     archiveGroup: $("archiveGroup").value.trim() || "Archive",
