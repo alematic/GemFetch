@@ -9,7 +9,7 @@ folder.
 MIT licensed · [privacy policy](PRIVACY.md) · landing page in [`docs/`](docs/)
 
 > **Support:** GemFetch is free and open source. If it helps you,
-> [donate via PayPal](https://paypal.me/AlessandroFulciniti).
+> [donate via PayPal](https://paypal.me/YOUR-HANDLE-HERE).
 
 ## Output
 
@@ -44,7 +44,13 @@ saved: 2026-08-30T14:32:01.000Z
   *“File chats into per-tab-group subfolders”* in Settings to file each chat into
   a subfolder named after the current Chrome tab group instead.
 
-## Install (unpacked)
+## Install
+
+Once published to the **Chrome Web Store**, end users just click *Add to Chrome*
+on the listing — one click, no developer mode, and Chrome auto-updates it. The
+steps below are only for running the unpacked source before/independently of that.
+
+### Unpacked (developer)
 
 1. `chrome://extensions` → enable **Developer mode**.
 2. **Load unpacked** → select this `gemfetch` folder.
@@ -92,6 +98,17 @@ enters their own key in Settings. No shared server, no shared quota.
   request is the cleanup/summary call to Google's Generative Language API.
 - If that call fails, the popup says so and still lets you save the raw text.
 - Uses `activeTab` → works on any `www.google.*` domain, no host list.
+
+## Does it work on other AI pages (Claude, ChatGPT, Perplexity…)?
+
+Not out of the box. The scraper targets Google's search DOM specifically. On a
+non-Google page it will usually just report "no content found".
+
+**But the selection fallback works anywhere:** select the answer text on any page,
+then click the icon — GemFetch sends your selection to Gemini for the title +
+synthesis + cleanup and saves it like normal. So it doubles as a general
+"save this selection as a summarized note" tool. Proper per-site scrapers for
+other assistants would be a future addition.
 
 ## Publishing
 
