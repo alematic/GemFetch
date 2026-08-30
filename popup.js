@@ -139,8 +139,14 @@ async function synthesize(apiKey, model, data) {
   }
   if (r.status === 429)
     throw new Error(
-      "Free-tier quota exhausted for this model. Try 'Gemini 2.0 Flash' in Settings, wait a bit, or add billing.",
+      "Free-tier quota exhausted for this model. Wait a minute, pick a lighter 'flash' model in Settings, or add billing to the key.",
     );
+  if (r.status === 404) {
+    const err = new Error(raw.slice(0, 300));
+    err.notFound = true;
+    err.replacement = suggestedReplacement(raw);
+    throw err;
+  }
   if (!r.ok) throw new Error(`API ${r.status}: ${raw.slice(0, 300)}`);
   let j;
   try { j = JSON.parse(raw); } catch { throw new Error("Bad API response"); }
@@ -274,6 +280,34 @@ async function doSave() {
   }
 }
 
+// Try the configured model; if it's been retired (404), switch to the model
+// Google suggests — or the top model the key can list — persist it, and retry.
+async function summarizeWithFallback(data) {
+  let model = CFG.model || "";
+  if (!model) {
+    const list = await discoverModels(CFG.apiKey).catch(() => []);
+    model = list[0] || "gemini-flash-latest";
+    await chrome.storage.local.set({ model, modelList: list });
+    CFG.model = model;
+  }
+  try {
+    return await synthesize(CFG.apiKey, model, data);
+  } catch (e) {
+    if (!e.notFound) throw e;
+    let next = e.replacement;
+    if (!next) {
+      const list = await discoverModels(CFG.apiKey);
+      await chrome.storage.local.set({ modelList: list });
+      next = list.find((m) => /flash/.test(m)) || list[0];
+    }
+    if (!next || next === model) throw new Error("This model was retired and no replacement was found. Open Settings → Refresh.");
+    log(`Model "${model}" retired — switching to "${next}"…`, "warn");
+    await chrome.storage.local.set({ model: next });
+    CFG.model = next;
+    return await synthesize(CFG.apiKey, next, data);
+  }
+}
+
 async function prepare() {
   try {
     log("Reading the page…");
@@ -293,7 +327,7 @@ async function prepare() {
     log("Summarizing…");
     let out, warn = "";
     try {
-      out = await synthesize(CFG.apiKey, CFG.model || "gemini-flash-latest", data);
+      out = await summarizeWithFallback(data);
     } catch (e) {
       warn = "AI summary failed (" + e.message + "). You can still save the raw text.";
       out = { title: data.query || "Gemini chat", synthesis: [], conversation: data.markdown };

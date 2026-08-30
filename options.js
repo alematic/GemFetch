@@ -1,18 +1,49 @@
 const $ = (id) => document.getElementById(id);
-const DEFAULT_MODEL = "gemini-2.0-flash";
+
+function fillModels(list, selected) {
+  const sel = $("model");
+  const all = [...list];
+  if (selected && !all.includes(selected)) all.unshift(selected);
+  if (!all.length) all.push("gemini-flash-latest");
+  sel.innerHTML = "";
+  all.forEach((m) => {
+    const o = document.createElement("option");
+    o.value = m;
+    o.textContent = m;
+    if (m === selected) o.selected = true;
+    sel.appendChild(o);
+  });
+}
 
 async function load() {
   const cfg = await chrome.storage.local.get([
-    "apiKey", "model", "folderName", "useGroups", "defaultGroup", "archiveGroup",
+    "apiKey", "model", "modelList", "folderName",
+    "useGroups", "defaultGroup", "archiveGroup",
   ]);
   $("key").value = cfg.apiKey || "";
-  $("model").value = cfg.model || DEFAULT_MODEL;
-  if (!$("model").value) $("model").value = DEFAULT_MODEL; // saved model not in list
   $("useGroups").checked = !!cfg.useGroups;
   $("defaultGroup").value = cfg.defaultGroup || "Inbox";
   $("archiveGroup").value = cfg.archiveGroup || "Archive";
   $("folder").textContent = cfg.folderName ? `✓ ${cfg.folderName}` : "none selected";
+  fillModels(cfg.modelList || [], cfg.model || "");
+  if (cfg.apiKey && !(cfg.modelList || []).length) refresh();
 }
+
+async function refresh() {
+  const apiKey = $("key").value.trim();
+  if (!apiKey) { $("status").textContent = "Enter and save the API key first."; return; }
+  $("status").textContent = "Loading models…";
+  try {
+    const list = await discoverModels(apiKey);
+    await chrome.storage.local.set({ modelList: list });
+    fillModels(list, $("model").value || list[0]);
+    $("status").textContent = `Loaded ${list.length} models.`;
+  } catch (e) {
+    $("status").textContent = "Failed: " + e.message;
+  }
+}
+
+$("refresh").addEventListener("click", refresh);
 
 $("pick").addEventListener("click", async () => {
   try {
@@ -30,7 +61,7 @@ $("pick").addEventListener("click", async () => {
 $("save").addEventListener("click", async () => {
   await chrome.storage.local.set({
     apiKey: $("key").value.trim(),
-    model: $("model").value || DEFAULT_MODEL,
+    model: $("model").value || "",
     useGroups: $("useGroups").checked,
     defaultGroup: $("defaultGroup").value.trim() || "Inbox",
     archiveGroup: $("archiveGroup").value.trim() || "Archive",
