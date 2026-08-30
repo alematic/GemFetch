@@ -61,6 +61,24 @@ saved: 2026-08-30T14:32:01.000Z
   (to the Archive subfolder, another tab-group subfolder, or the folder root).
 - If Chrome forgot folder permission, reopen the popup to re-grant.
 
+## API key, quotas, other users
+
+Each user brings their own **free** Google AI Studio key (`aistudio.google.com/apikey`).
+The key is stored locally in that user's browser only.
+
+The free tier is rate-limited **per model** (requests per minute and per day).
+GemFetch defaults to **Gemini 2.0 Flash**, which has the most generous free
+allowance (~200 requests/day). If you see `429` errors:
+
+- Wait a minute (GemFetch auto-retries once) — per-minute limits reset fast.
+- Stay on Gemini 2.0 Flash; the newer models have much smaller free quotas.
+- For heavy use, enable **billing** on the key's Google Cloud project
+  (console.cloud.google.com → Billing). A consumer *Gemini Advanced / Pro*
+  subscription does **not** raise API limits — only Cloud billing does.
+
+To distribute: share this folder (or the repo). Each person loads it unpacked and
+enters their own key in Settings. No shared server, no shared quota.
+
 ## Notes / limitations
 
 - Google's markup is unlabelled and shifts often; the scraper is best-effort. If

@@ -100,7 +100,7 @@ async function synthesize(apiKey, model, data) {
             text:
               PROMPT +
               `\n\nUser's search query: ${data.query || "(unknown)"}\n\nRaw text:\n"""\n` +
-              (data.markdown || "").slice(0, 120000) +
+              (data.markdown || "").slice(0, 60000) +
               `\n"""`,
           },
         ],
@@ -120,12 +120,27 @@ async function synthesize(apiKey, model, data) {
     },
   };
 
-  const r = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const raw = await r.text();
+  let r, raw;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    r = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    raw = await r.text();
+    if (r.status === 429 && attempt === 0) {
+      const m = raw.match(/"retryDelay":\s*"(\d+)s"/);
+      const wait = m ? Math.min(+m[1] + 1, 55) : 25;
+      log(`Rate limited by the API — retrying in ${wait}s…`, "warn");
+      await new Promise((res) => setTimeout(res, wait * 1000));
+      continue;
+    }
+    break;
+  }
+  if (r.status === 429)
+    throw new Error(
+      "Free-tier quota exhausted for this model. Try 'Gemini 2.0 Flash' in Settings, wait a bit, or add billing.",
+    );
   if (!r.ok) throw new Error(`API ${r.status}: ${raw.slice(0, 300)}`);
   let j;
   try { j = JSON.parse(raw); } catch { throw new Error("Bad API response"); }

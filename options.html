@@ -10,12 +10,12 @@
     input[type=text], input[type=password], select { width: 100%; padding: 8px; box-sizing: border-box; }
     button { padding: 8px 14px; margin-top: 8px; cursor: pointer; }
     .row { display: flex; align-items: center; gap: 10px; }
-    .row select { flex: 1; }
     .inline { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-weight: 600; }
     .inline input { width: auto; }
     .muted { color: #666; }
     .ok { color: #187d3c; }
     code { background: #f2f2f2; padding: 1px 4px; border-radius: 3px; }
+    a { color: #1a73e8; }
   </style>
 </head>
 <body>
@@ -23,14 +23,19 @@
 
   <label for="key">Google AI Studio API key</label>
   <input id="key" type="password" placeholder="AIza..." autocomplete="off" />
-  <div class="muted">Free key from <code>aistudio.google.com/apikey</code>. Stored locally in this browser only.</div>
+  <div class="muted">
+    Free key from <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
+    Stored locally in this browser only. The free tier allows a limited number of
+    requests per day; if you hit <code>429</code> errors often, add billing to the
+    key's Google Cloud project (a consumer “Gemini” subscription does not raise API limits).
+  </div>
 
   <label for="model">Model</label>
-  <div class="row">
-    <select id="model"></select>
-    <button id="refresh" type="button">Refresh list</button>
-  </div>
-  <div class="muted">Click “Refresh list” once your key is saved to load the models available to it.</div>
+  <select id="model">
+    <option value="gemini-2.0-flash">Gemini 2.0 Flash — fast, largest free quota (recommended)</option>
+    <option value="gemini-2.5-flash">Gemini 2.5 Flash — better quality, smaller free quota</option>
+    <option value="gemini-flash-latest">Gemini Flash (latest) — newest, may need billing</option>
+  </select>
 
   <label class="inline"><input id="useGroups" type="checkbox" /> File chats into per-tab-group subfolders</label>
   <div class="muted">Off = every chat goes straight into the working folder. On = a subfolder named after the current Chrome tab group.</div>
