@@ -261,9 +261,8 @@ function buildMarkdown(title, synthLines, data, conversation, groupName) {
       `source: ${data.mode}\n` +
       (groupName ? `group: ${groupName}\n` : "") +
       `query: "${(data.query || "").replace(/"/g, "'")}"\n` +
-      `url: ${data.url}\n` +
       `saved: ${now.toISOString()}\n` +
-      `---\n\n# ${title}\n\n[Open this chat](${data.url})\n\n` +
+      `---\n\n# ${title}\n\n[↗ Open this chat in your browser](${data.url})\n\n` +
       `## Synthesis\n\n` +
       (bullets.length ? bullets.map((s) => `- ${s}`).join("\n") : "_(none)_") +
       `\n\n## Conversation\n\n${conversation}\n`,
