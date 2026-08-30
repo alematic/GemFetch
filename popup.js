@@ -5,6 +5,7 @@ const synthEl = document.getElementById("synth");
 const groupEl = document.getElementById("group");
 const groupLabel = document.getElementById("groupLabel");
 const saveEl = document.getElementById("save");
+const grantEl = document.getElementById("grant");
 const recentEl = document.getElementById("recent");
 const recentWrap = document.getElementById("recentWrap");
 
@@ -260,14 +261,6 @@ async function doSave() {
 
 async function prepare() {
   try {
-    if (!CFG.apiKey || !ROOT) {
-      log("Open Settings: set the API key and working folder.", "err");
-      return;
-    }
-    log("Requesting folder access…");
-    if (!(await ensurePermission(ROOT)))
-      throw new Error("Folder access denied. Reopen the popup to retry.");
-
     log("Reading the page…");
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (CFG.useGroups) {
@@ -300,16 +293,42 @@ async function prepare() {
   }
 }
 
+async function afterPermission() {
+  try { await renderRecent(); } catch (e) {}
+  prepare();
+}
+
 async function init() {
   CFG = await chrome.storage.local.get([
     "apiKey", "model", "useGroups", "defaultGroup", "archiveGroup",
   ]);
   ROOT = await idbGet("dirHandle");
-  if (ROOT && (await ROOT.queryPermission({ mode: "readwrite" })) === "granted") {
-    try { await renderRecent(); } catch (e) {}
-  }
   saveEl.addEventListener("click", doSave);
-  prepare();
+
+  grantEl.addEventListener("click", async () => {
+    grantEl.disabled = true;
+    try {
+      if ((await ROOT.requestPermission({ mode: "readwrite" })) !== "granted")
+        throw new Error("denied");
+      grantEl.style.display = "none";
+      await afterPermission();
+    } catch (e) {
+      grantEl.disabled = false;
+      log("Access denied — click the button to try again.", "err");
+    }
+  });
+
+  if (!CFG.apiKey || !ROOT) {
+    log("Open Settings: set the API key and working folder.", "err");
+    return;
+  }
+
+  if ((await ROOT.queryPermission({ mode: "readwrite" })) === "granted") {
+    await afterPermission();
+  } else {
+    log("Click to grant access to your working folder (once per browser session).");
+    grantEl.style.display = "block";
+  }
 }
 
 init();
