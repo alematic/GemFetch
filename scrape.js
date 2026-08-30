@@ -40,6 +40,9 @@ function scrapeGeminiConversation() {
       if (c.nodeType !== 1) return;
       const tag = c.tagName.toLowerCase();
       if (SKIP.has(tag)) return;
+      if (c.getAttribute && c.getAttribute("aria-hidden") === "true") return;
+      const role = c.getAttribute && c.getAttribute("role");
+      if (["navigation", "complementary", "banner", "search", "contentinfo", "menu", "menubar", "toolbar", "tablist"].includes(role)) return;
       const cs = window.getComputedStyle(c);
       if (cs && (cs.display === "none" || cs.visibility === "hidden")) return;
 

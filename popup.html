@@ -3,17 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <style>
-    body { font: 13px/1.5 system-ui, sans-serif; width: 340px; margin: 0; padding: 14px; }
-    h1 { font-size: 14px; margin: 0 0 8px; }
-    label { font-weight: 600; display: block; margin-bottom: 3px; }
-    input[type=text] { width: 100%; padding: 6px; box-sizing: border-box; margin-bottom: 8px; }
+    body { font: 13px/1.5 system-ui, sans-serif; width: 360px; margin: 0; padding: 14px; }
+    h1 { font-size: 14px; margin: 0 0 6px; }
+    label { font-weight: 600; display: block; margin: 8px 0 3px; }
+    input[type=text], textarea { width: 100%; padding: 6px; box-sizing: border-box; font-family: inherit; }
+    textarea { resize: vertical; }
     button { padding: 7px 12px; cursor: pointer; font-size: 13px; }
-    #go { width: 100%; }
-    #log { margin: 10px 0; white-space: pre-wrap; color: #333; min-height: 34px; }
+    #save { width: 100%; margin-top: 10px; }
+    #log { margin: 8px 0; white-space: pre-wrap; color: #333; }
     .err { color: #b3261e; }
     .ok { color: #187d3c; }
+    .warn { color: #9a6700; }
     a { color: #1a73e8; }
-    .recent { margin-top: 10px; border-top: 1px solid #e0e0e0; padding-top: 8px; }
+    #editor { display: none; }
+    .recent { margin-top: 12px; border-top: 1px solid #e0e0e0; padding-top: 8px; }
     .recent h2 { font-size: 12px; color: #666; margin: 0 0 6px; }
     .row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
     .row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -22,14 +25,26 @@
 </head>
 <body>
   <h1>GemFetch</h1>
-  <label for="group">Group (Chrome tab group → subfolder)</label>
-  <input id="group" type="text" placeholder="Inbox" />
-  <button id="go">Fetch &amp; save this page</button>
-  <div id="log">Detecting…</div>
+  <div id="log">Reading page…</div>
+
+  <div id="editor">
+    <label for="title">Title</label>
+    <input id="title" type="text" />
+
+    <label for="synth">Synthesis — one bullet per line</label>
+    <textarea id="synth" rows="6"></textarea>
+
+    <label for="group" id="groupLabel" style="display:none">Group (tab-group subfolder)</label>
+    <input id="group" type="text" style="display:none" />
+
+    <button id="save">Save</button>
+  </div>
+
   <div class="recent" id="recentWrap" style="display:none">
-    <h2>Recent — move to another group</h2>
+    <h2>Recent — move to another folder</h2>
     <div id="recent"></div>
   </div>
+
   <div style="margin-top:8px"><a href="#" id="opts">Settings</a></div>
 
   <script src="shared.js"></script>
