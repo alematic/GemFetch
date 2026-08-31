@@ -28,6 +28,21 @@ function scrapeGeminiConversation() {
 
   const SKIP = new Set(["script","style","noscript","svg","button","input","textarea","select","form","nav","header","footer"]);
 
+  function imgSrc(el) {
+    let s = el.currentSrc || el.getAttribute("src") || el.getAttribute("data-src") || el.getAttribute("data-lsrc") || "";
+    if (!/^(https?:|data:image\/)/.test(s) && el.getAttribute("srcset")) {
+      const parts = el.getAttribute("srcset").split(",").map((x) => x.trim().split(/\s+/)[0]);
+      s = parts[parts.length - 1] || s;
+    }
+    return s;
+  }
+  function usableImg(s, w, h) {
+    if (!/^(https?:|data:image\/)/.test(s)) return false;
+    if (/gstatic\.com\/(faviconV2|images\/branding)|\/branding\/|googlelogo/i.test(s)) return false;
+    if ((w && w < 40) || (h && h < 40)) return false;
+    return true;
+  }
+
   function blockMd(el, depth) {
     depth = depth || 0;
     let out = "";
@@ -39,7 +54,9 @@ function scrapeGeminiConversation() {
       }
       if (c.nodeType !== 1) return;
       const tag = c.tagName.toLowerCase();
-      if (SKIP.has(tag)) return;
+      // Skip chrome, but still descend into a button/figure that wraps an image
+      // (Gemini shows prompt attachments as image chips).
+      if (SKIP.has(tag) && !((tag === "button" || tag === "form") && c.querySelector("img"))) return;
       if (c.getAttribute && c.getAttribute("aria-hidden") === "true") return;
       const role = c.getAttribute && c.getAttribute("role");
       if (["navigation", "complementary", "banner", "search", "contentinfo", "menu", "menubar", "toolbar", "tablist"].includes(role)) return;
@@ -71,14 +88,11 @@ function scrapeGeminiConversation() {
       } else if (tag === "pre") {
         out += "```\n" + c.textContent.trim() + "\n```\n\n";
       } else if (tag === "img") {
-        const src = c.currentSrc || c.getAttribute("src") || "";
-        const w = c.naturalWidth || c.width || 0;
-        const h = c.naturalHeight || c.height || 0;
-        const junk = /gstatic\.com\/(faviconV2|images\/branding)|\/branding\//i.test(src);
-        if (/^(https?:|data:image\/)/.test(src) && !junk && (w === 0 || w >= 48) && (h === 0 || h >= 48)) {
+        const src = imgSrc(c);
+        if (usableImg(src, c.naturalWidth || c.width, c.naturalHeight || c.height)) {
           out += `![${(c.alt || "").replace(/[\[\]\n]/g, " ").trim()}](${src})\n\n`;
         }
-      } else if (["p","div","section","article","span","main","li"].includes(tag)) {
+      } else if (["p","div","section","article","span","main","li","figure"].includes(tag)) {
         if (c.querySelector("h1,h2,h3,h4,h5,h6,ul,ol,p,table,pre")) {
           out += blockMd(c, depth);
         } else {
@@ -159,5 +173,34 @@ function scrapeGeminiConversation() {
     });
   }
 
-  return { url, query, mode, markdown: clean(markdown), sources: sources.slice(0, 25) };
+  // Every image in the region — prompt attachments AND answer images, even
+  // inside skipped containers.
+  const images = [];
+  const imgSeen = new Set();
+  if (scopeEl) {
+    scopeEl.querySelectorAll("img").forEach((im) => {
+      const s = imgSrc(im);
+      if (!usableImg(s, im.naturalWidth || im.width, im.naturalHeight || im.height)) return;
+      if (imgSeen.has(s)) return;
+      imgSeen.add(s);
+      images.push({ src: s, alt: (im.alt || "").replace(/[\[\]\n]/g, " ").trim() });
+    });
+    scopeEl.querySelectorAll('[style*="background-image"]').forEach((el) => {
+      const m = /url\(["']?((?:https?:|data:image\/)[^"')]+)["']?\)/.exec(el.getAttribute("style") || "");
+      if (!m || imgSeen.has(m[1])) return;
+      const r = el.getBoundingClientRect();
+      if (r.width < 40 || r.height < 40) return;
+      imgSeen.add(m[1]);
+      images.push({ src: m[1], alt: (el.getAttribute("aria-label") || "").trim() });
+    });
+  }
+
+  return {
+    url,
+    query,
+    mode,
+    markdown: clean(markdown),
+    sources: sources.slice(0, 25),
+    images: images.slice(0, 20),
+  };
 }

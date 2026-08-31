@@ -84,7 +84,7 @@ REMOVE completely:
 
 KEEP:
 - The user's actual question(s) and the substantive answer(s): explanations, lists, tables, code blocks, and inline citation links that belong to the answer.
-- Every image: any Markdown image \`![alt](url)\` in the raw text must appear UNCHANGED and in the same position in your "conversation" output. Never drop, rewrite or invent image URLs.
+- Every image, from BOTH the user's prompts and the answers: any Markdown image \`![alt](url)\` in the raw text must appear UNCHANGED and in the same position in your "conversation" output. Never drop, rewrite or invent image URLs.
 
 Return JSON with:
 - "title": a concise, specific, descriptive title (max ~12 words, no surrounding quotes, no trailing punctuation).
@@ -255,13 +255,15 @@ function buildMarkdown(title, synthLines, data, conversation, groupName) {
     .map((s) => s.trim().replace(/^[-*]\s*/, ""))
     .filter(Boolean);
 
-  // If the model dropped images that were in the raw scrape, append them.
-  const rawImgs = (data.markdown || "").match(/!\[[^\]]*\]\([^)]+\)/g) || [];
-  const convHasImg = /!\[[^\]]*\]\([^)]+\)/.test(conversation);
-  const imagesBlock =
-    rawImgs.length && !convHasImg
-      ? `\n\n## Images\n\n` + [...new Set(rawImgs)].join("\n\n") + "\n"
-      : "";
+  // Images from the prompt(s) and answer(s) that aren't already inline in the
+  // conversation get collected here (prompt attachments, or ones the model dropped).
+  const imgs = Array.isArray(data.images) ? data.images : [];
+  const missing = imgs.filter((im) => !conversation.includes(im.src));
+  const imagesBlock = missing.length
+    ? `\n\n## Images\n\n` +
+      missing.map((im) => `![${(im.alt || "").replace(/[\[\]]/g, "")}](${im.src})`).join("\n\n") +
+      "\n"
+    : "";
 
   const src = Array.isArray(data.sources) ? data.sources : [];
   const sourcesBlock = src.length
