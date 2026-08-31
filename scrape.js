@@ -70,6 +70,14 @@ function scrapeGeminiConversation() {
         out += "\n";
       } else if (tag === "pre") {
         out += "```\n" + c.textContent.trim() + "\n```\n\n";
+      } else if (tag === "img") {
+        const src = c.currentSrc || c.getAttribute("src") || "";
+        const w = c.naturalWidth || c.width || 0;
+        const h = c.naturalHeight || c.height || 0;
+        const junk = /gstatic\.com\/(faviconV2|images\/branding)|\/branding\//i.test(src);
+        if (/^(https?:|data:image\/)/.test(src) && !junk && (w === 0 || w >= 48) && (h === 0 || h >= 48)) {
+          out += `![${(c.alt || "").replace(/[\[\]\n]/g, " ").trim()}](${src})\n\n`;
+        }
       } else if (["p","div","section","article","span","main","li"].includes(tag)) {
         if (c.querySelector("h1,h2,h3,h4,h5,h6,ul,ol,p,table,pre")) {
           out += blockMd(c, depth);
@@ -92,13 +100,14 @@ function scrapeGeminiConversation() {
 
   const sel = window.getSelection ? String(window.getSelection()) : "";
   let markdown = "";
+  let scopeEl = null;
 
   if (sel && sel.trim().length > 40) {
     markdown = sel.trim();
     mode += " (selection)";
   } else if (isAiMode) {
-    const main = document.querySelector('div[role="main"], #main') || document.body;
-    markdown = blockMd(main);
+    scopeEl = document.querySelector('div[role="main"], #main') || document.body;
+    markdown = blockMd(scopeEl);
   } else {
     let box =
       document.querySelector('[data-subtree="aio"]') ||
@@ -111,8 +120,44 @@ function scrapeGeminiConversation() {
       cands.sort((a, b) => a.textContent.length - b.textContent.length);
       box = cands[0] || document.querySelector("#rso") || document.querySelector('div[role="main"]');
     }
+    scopeEl = box;
     markdown = box ? blockMd(box) : "";
   }
 
-  return { url, query, mode, markdown: clean(markdown) };
+  // Citation / source links inside the answer region.
+  function realUrl(href) {
+    try {
+      const u = new URL(href, location.href);
+      const q = u.searchParams.get("q") || u.searchParams.get("url");
+      if (q && /^https?:/.test(q)) return q;
+      return u.href;
+    } catch (e) {
+      return href;
+    }
+  }
+  const BAD_HOST = /(^|\.)(google\.[a-z.]+|gstatic\.com|googleusercontent\.com|youtube\.com\/redirect|accounts\.google|policies\.google|support\.google)$/i;
+  const sources = [];
+  const seen = new Set();
+  if (scopeEl) {
+    scopeEl.querySelectorAll('a[href^="http"], a[href^="/url?"]').forEach((a) => {
+      const href = realUrl(a.getAttribute("href") || "");
+      let host;
+      try {
+        host = new URL(href, location.href).hostname.replace(/^www\./, "");
+      } catch (e) {
+        return;
+      }
+      if (BAD_HOST.test(host) || seen.has(href)) return;
+      const cs = window.getComputedStyle(a);
+      if (cs && cs.display === "none") return;
+      seen.add(href);
+      const title = (a.textContent || a.getAttribute("aria-label") || host)
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 140) || host;
+      sources.push({ title, url: href, host });
+    });
+  }
+
+  return { url, query, mode, markdown: clean(markdown), sources: sources.slice(0, 25) };
 }

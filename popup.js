@@ -76,14 +76,15 @@ async function detectGroup(tab) {
 const PROMPT = `You are given raw text scraped from a Google "AI Mode" or "AI Overview" answer panel. The scrape contains a lot of page clutter mixed in with the real answer.
 
 REMOVE completely:
-- Navigation, toolbar and button labels ("Show more", "Show less", "Sources", "Share", "Export", "Feedback", "Copy", "Thumbs up/down").
+- Navigation, toolbar and button labels ("Show more", "Show less", "Share", "Export", "Feedback", "Copy", "Thumbs up/down").
 - Suggested / follow-up questions, "People also ask", "Related searches", ad or promo text.
 - Sign-in prompts, cookie notices, disclaimers ("AI responses may include mistakes", "Generative AI is experimental").
 - Repeated page headers/footers and menu items.
 - Filler, hedging and padding. Tighten wordy sentences without changing their meaning.
 
 KEEP:
-- The user's actual question(s) and the substantive answer(s): explanations, lists, tables, code blocks, and inline source links that belong to the answer.
+- The user's actual question(s) and the substantive answer(s): explanations, lists, tables, code blocks, and inline citation links that belong to the answer.
+- Every image: any Markdown image \`![alt](url)\` in the raw text must appear UNCHANGED and in the same position in your "conversation" output. Never drop, rewrite or invent image URLs.
 
 Return JSON with:
 - "title": a concise, specific, descriptive title (max ~12 words, no surrounding quotes, no trailing punctuation).
@@ -253,6 +254,24 @@ function buildMarkdown(title, synthLines, data, conversation, groupName) {
   const bullets = synthLines
     .map((s) => s.trim().replace(/^[-*]\s*/, ""))
     .filter(Boolean);
+
+  // If the model dropped images that were in the raw scrape, append them.
+  const rawImgs = (data.markdown || "").match(/!\[[^\]]*\]\([^)]+\)/g) || [];
+  const convHasImg = /!\[[^\]]*\]\([^)]+\)/.test(conversation);
+  const imagesBlock =
+    rawImgs.length && !convHasImg
+      ? `\n\n## Images\n\n` + [...new Set(rawImgs)].join("\n\n") + "\n"
+      : "";
+
+  const src = Array.isArray(data.sources) ? data.sources : [];
+  const sourcesBlock = src.length
+    ? `\n\n## Sources\n\n` +
+      src
+        .map((s, i) => `${i + 1}. [${(s.title || s.host).replace(/[\[\]]/g, "")}](${s.url})`)
+        .join("\n") +
+      "\n"
+    : "";
+
   return {
     now,
     md:
@@ -265,7 +284,9 @@ function buildMarkdown(title, synthLines, data, conversation, groupName) {
       `---\n\n# ${title}\n\n[↗ Open this chat in your browser](${data.url})\n\n` +
       `## Synthesis\n\n` +
       (bullets.length ? bullets.map((s) => `- ${s}`).join("\n") : "_(none)_") +
-      `\n\n## Conversation\n\n${conversation}\n`,
+      `\n\n## Conversation\n\n${conversation}\n` +
+      imagesBlock +
+      sourcesBlock,
   };
 }
 

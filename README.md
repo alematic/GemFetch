@@ -36,8 +36,16 @@ saved: 2026-08-30T14:32:01.000Z
 ### Prompt
 ...
 ### Response
-...
+... (images kept inline as ![](url))
+
+## Sources
+1. [Page title](https://example.com/article)
+2. ...
 ```
+
+Images found in the answer are kept inline (or collected under `## Images` if the
+model drops them). Citation links from the answer are listed under `## Sources`
+as remote URLs — some Google-hosted image URLs and redirect links may expire.
 
 - Filename: `YYMMDD-<title-slug>.md` (`-1`, `-2` … on collision).
 - By default files go **straight into the working folder**. Turn on
