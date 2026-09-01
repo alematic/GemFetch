@@ -103,7 +103,7 @@ function downloadMarkdown(relPath, md) {
 
 // --- Gemini summarization --------------------------------------------------
 
-const PROMPT = `You are given raw text scraped from a Google "AI Mode" or "AI Overview" answer panel. The scrape contains a lot of page clutter mixed in with the real answer.
+const PROMPT = `You are given raw text scraped from an AI assistant conversation (Google AI Mode / AI Overview, ChatGPT, Claude, Gemini, Perplexity, Copilot, or similar), or from a web page. The scrape contains a lot of interface clutter mixed in with the real content.
 
 REMOVE completely:
 - Navigation, toolbar and button labels ("Show more", "Show less", "Share", "Export", "Feedback", "Copy", "Thumbs up/down").
@@ -113,7 +113,7 @@ REMOVE completely:
 - Filler, hedging and padding. Tighten wordy sentences without changing their meaning.
 
 KEEP:
-- The user's actual question(s) and the substantive answer(s): explanations, lists, tables, code blocks, and inline citation links that belong to the answer.
+- The full exchange: every user turn and every assistant turn, in order — explanations, lists, tables, code blocks, and inline citation links that belong to the content.
 - Every image, from BOTH the user's prompts and the answers: any Markdown image \`![alt](url)\` in the raw text must appear UNCHANGED and in the same position in your "conversation" output. Never drop, rewrite or invent image URLs.
 
 Return JSON with:

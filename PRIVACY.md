@@ -2,13 +2,13 @@
 
 _Last updated: 2026-09-01_
 
-GemFetch is a browser extension that saves a Google AI Overview / AI Mode answer
+GemFetch is a browser extension that saves an AI assistant conversation (or selected page text)
 as a Markdown file on your computer.
 
 ## What data GemFetch handles
 
 - **Page content.** When you click the toolbar button, GemFetch reads the text of
-  the Google results page you are on, so it can extract the answer.
+  the page you clicked the button on, so it can extract the conversation.
 - **Your API key.** You enter a Google AI Studio API key in the extension's
   settings.
 - **Your settings.** Model choice, save-folder name, group names, extra
@@ -39,7 +39,7 @@ as a Markdown file on your computer.
 
 | Permission | Reason |
 |---|---|
-| `activeTab` + `scripting` | Read the current Google page's text when you click the button. |
+| `activeTab` + `scripting` | Read the current page's text — only the tab you clicked the button on. |
 | `storage` | Save your settings and recent-saves list locally. |
 | `downloads` | Write the Markdown file into a Downloads subfolder, and reveal it when you click "Show". |
 | `tabs`, `tabGroups` | Read the current tab's Chrome tab-group name to choose a subfolder. |

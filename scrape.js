@@ -1,8 +1,10 @@
-// This whole function is injected into the Google page. It must be self-contained.
-function scrapeGeminiConversation() {
+// Injected into the active tab. Must be fully self-contained.
+// Handles Google AI Overview / AI Mode plus the major web chat assistants,
+// with a generic <main> fallback for anything else.
+function scrapeConversation() {
   const clean = (s) =>
     (s || "")
-      .replace(/ /g, " ")
+      .replace(/ /g, " ")
       .replace(/[ \t]+\n/g, "\n")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
@@ -26,7 +28,7 @@ function scrapeGeminiConversation() {
     return out;
   }
 
-  const SKIP = new Set(["script","style","noscript","svg","button","input","textarea","select","form","nav","header","footer"]);
+  const SKIP = new Set(["script","style","noscript","svg","input","textarea","select","form","nav","header","footer"]);
 
   function imgSrc(el) {
     let s = el.currentSrc || el.getAttribute("src") || el.getAttribute("data-src") || el.getAttribute("data-lsrc") || "";
@@ -38,7 +40,7 @@ function scrapeGeminiConversation() {
   }
   function usableImg(s, w, h) {
     if (!/^(https?:|data:image\/)/.test(s)) return false;
-    if (/gstatic\.com\/(faviconV2|images\/branding)|\/branding\/|googlelogo/i.test(s)) return false;
+    if (/gstatic\.com\/(faviconV2|images\/branding)|\/branding\/|googlelogo|avatar|profile-picture/i.test(s)) return false;
     if ((w && w < 40) || (h && h < 40)) return false;
     return true;
   }
@@ -55,11 +57,15 @@ function scrapeGeminiConversation() {
       if (c.nodeType !== 1) return;
       const tag = c.tagName.toLowerCase();
       // Skip chrome, but still descend into a button/figure that wraps an image
-      // (Gemini shows prompt attachments as image chips).
-      if (SKIP.has(tag) && !((tag === "button" || tag === "form") && c.querySelector("img"))) return;
+      // (assistants show prompt attachments as image chips inside buttons).
+      if (tag === "button") {
+        if (c.querySelector("img")) out += blockMd(c, depth);
+        return;
+      }
+      if (SKIP.has(tag)) return;
       if (c.getAttribute && c.getAttribute("aria-hidden") === "true") return;
       const role = c.getAttribute && c.getAttribute("role");
-      if (["navigation", "complementary", "banner", "search", "contentinfo", "menu", "menubar", "toolbar", "tablist"].includes(role)) return;
+      if (["navigation","complementary","banner","search","contentinfo","menu","menubar","toolbar","tablist"].includes(role)) return;
       const cs = window.getComputedStyle(c);
       if (cs && (cs.display === "none" || cs.visibility === "hidden")) return;
 
@@ -86,14 +92,16 @@ function scrapeGeminiConversation() {
         });
         out += "\n";
       } else if (tag === "pre") {
-        out += "```\n" + c.textContent.trim() + "\n```\n\n";
+        const codeEl = c.querySelector("code");
+        const codeText = (codeEl ? codeEl.textContent : c.textContent).replace(/\n+$/, "");
+        out += "```\n" + codeText + "\n```\n\n";
       } else if (tag === "img") {
         const src = imgSrc(c);
         if (usableImg(src, c.naturalWidth || c.width, c.naturalHeight || c.height)) {
           out += `![${(c.alt || "").replace(/[\[\]\n]/g, " ").trim()}](${src})\n\n`;
         }
-      } else if (["p","div","section","article","span","main","li","figure"].includes(tag)) {
-        if (c.querySelector("h1,h2,h3,h4,h5,h6,ul,ol,p,table,pre")) {
+      } else if (["p","div","section","article","span","main","li","figure","details"].includes(tag)) {
+        if (c.querySelector("h1,h2,h3,h4,h5,h6,ul,ol,p,table,pre,img")) {
           out += blockMd(c, depth);
         } else {
           const t = inlineMd(c).trim();
@@ -106,23 +114,49 @@ function scrapeGeminiConversation() {
     return out;
   }
 
+  // --- site registry: known web chat assistants -------------------------
+  const HOST = location.hostname.replace(/^www\./, "");
+  const SITES = [
+    { re: /^chatgpt\.com$|^chat\.openai\.com$/, name: "ChatGPT" },
+    { re: /^claude\.ai$/, name: "Claude" },
+    { re: /^gemini\.google\.com$/, name: "Gemini" },
+    { re: /(^|\.)perplexity\.ai$/, name: "Perplexity" },
+    { re: /^copilot\.microsoft\.com$|^bing\.com$/, name: "Copilot" },
+    { re: /^grok\.com$|^x\.ai$/, name: "Grok" },
+    { re: /^poe\.com$/, name: "Poe" },
+    { re: /^chat\.mistral\.ai$/, name: "Le Chat" },
+    { re: /^chat\.deepseek\.com$/, name: "DeepSeek" },
+    { re: /^you\.com$/, name: "You.com" },
+  ];
+  const site = SITES.find((s) => s.re.test(HOST));
+
   const url = location.href;
   const qEl = document.querySelector('textarea[name="q"], input[name="q"]');
   const query = (qEl && qEl.value) || "";
-  const isAiMode = /[?&]udm=50/.test(url);
-  let mode = isAiMode ? "AI Mode" : "AI Overview";
+  const isGoogleSearch = /(^|\.)google\.[a-z.]+$/.test(HOST) && /\/search/.test(location.pathname);
+  const isAiMode = isGoogleSearch && /[?&]udm=50/.test(url);
 
   const sel = window.getSelection ? String(window.getSelection()) : "";
   let markdown = "";
   let scopeEl = null;
+  let mode;
 
   if (sel && sel.trim().length > 40) {
     markdown = sel.trim();
-    mode += " (selection)";
+    mode = (site ? site.name : isGoogleSearch ? "Google" : "Web page") + " (selection)";
+  } else if (site) {
+    scopeEl =
+      document.querySelector("main") ||
+      document.querySelector('[role="main"]') ||
+      document.querySelector("#__next main, chat-window") ||
+      document.body;
+    markdown = blockMd(scopeEl);
+    mode = site.name;
   } else if (isAiMode) {
     scopeEl = document.querySelector('div[role="main"], #main') || document.body;
     markdown = blockMd(scopeEl);
-  } else {
+    mode = "AI Mode";
+  } else if (isGoogleSearch) {
     let box =
       document.querySelector('[data-subtree="aio"]') ||
       document.querySelector('div[aria-label^="AI Overview" i]');
@@ -136,20 +170,27 @@ function scrapeGeminiConversation() {
     }
     scopeEl = box;
     markdown = box ? blockMd(box) : "";
+    mode = "AI Overview";
+  } else {
+    // Generic: grab the main content region of any page.
+    scopeEl = document.querySelector('main, [role="main"], #main, article') || null;
+    markdown = scopeEl ? blockMd(scopeEl) : "";
+    mode = "Web page";
   }
 
-  // Citation / source links inside the answer region.
+  // --- links referenced in the captured region -------------------------
   function realUrl(href) {
     try {
       const u = new URL(href, location.href);
-      const q = u.searchParams.get("q") || u.searchParams.get("url");
+      const q = u.searchParams.get("q") || u.searchParams.get("url") || u.searchParams.get("u");
       if (q && /^https?:/.test(q)) return q;
       return u.href;
     } catch (e) {
       return href;
     }
   }
-  const BAD_HOST = /(^|\.)(google\.[a-z.]+|gstatic\.com|googleusercontent\.com|youtube\.com\/redirect|accounts\.google|policies\.google|support\.google)$/i;
+  const ASSET_HOST = /(^|\.)(gstatic\.com|googleusercontent\.com|google\.[a-z.]+|bing\.com|microsoft\.com|office\.com|openai\.com|oaistatic\.com|oaiusercontent\.com|anthropic\.com|perplexity\.ai|cloudflare\.com|licdn\.com|fbcdn\.net)$/i;
+  const UI_WORD = /^(new chat|share|copy|copied|regenerate|edit|delete|settings|upgrade|sign in|log in|help|feedback|sources?|show more|show less|continue|retry)$/i;
   const sources = [];
   const seen = new Set();
   if (scopeEl) {
@@ -161,20 +202,17 @@ function scrapeGeminiConversation() {
       } catch (e) {
         return;
       }
-      if (BAD_HOST.test(host) || seen.has(href)) return;
+      const text = (a.textContent || a.getAttribute("aria-label") || "").replace(/\s+/g, " ").trim();
+      if (host === HOST || ASSET_HOST.test(host) || seen.has(href)) return;
+      if (UI_WORD.test(text) || text.length < 2) return;
       const cs = window.getComputedStyle(a);
       if (cs && cs.display === "none") return;
       seen.add(href);
-      const title = (a.textContent || a.getAttribute("aria-label") || host)
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 140) || host;
-      sources.push({ title, url: href, host });
+      sources.push({ title: (text || host).slice(0, 140), url: href, host });
     });
   }
 
-  // Every image in the region — prompt attachments AND answer images, even
-  // inside skipped containers.
+  // --- images: prompt attachments AND answer images -------------------
   const images = [];
   const imgSeen = new Set();
   if (scopeEl) {

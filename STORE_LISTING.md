@@ -8,7 +8,7 @@ https://chrome.google.com/webstore/devconsole (one-time $5 registration).
 **Name:** GemFetch
 
 **Summary (132 char max):**
-Save Google AI Overview / AI Mode answers as clean Markdown — AI title, bullet synthesis, tidy transcript — in one click.
+Save any AI chat (Google AI Mode, ChatGPT, Claude, Gemini, Perplexity…) as clean Markdown — title, synthesis, transcript — in one click.
 
 **Category:** Productivity
 
@@ -18,8 +18,9 @@ Save Google AI Overview / AI Mode answers as clean Markdown — AI title, bullet
 
 ## Detailed description
 
-GemFetch turns a Google "AI Mode" conversation or "AI Overview" box into a tidy
-Markdown note on your computer — in one click.
+GemFetch turns an AI assistant conversation — Google AI Mode / AI Overview,
+ChatGPT, Claude, Gemini, Perplexity, Copilot and more — into a tidy Markdown
+note on your computer, in one click.
 
 • **One click, one file.** Click the toolbar button, glance at the auto-generated
   title and bullet-point synthesis, hit Save.
@@ -43,11 +44,11 @@ free tier is rate-limited; heavy users can enable billing on their own key.
 
 ## Privacy practices tab
 
-- **Single purpose:** Save the AI answer on a Google search results page as a
-  Markdown file.
+- **Single purpose:** Save the current AI assistant conversation (or selected
+  page text) as a Markdown file.
 - **Permission justifications:**
-  - `activeTab` + `scripting`: read the current Google page's text when the user
-    clicks the button.
+  - `activeTab` + `scripting`: read the current page's text (only the tab the
+    user explicitly clicked the button on).
   - `storage`: store the user's settings and recent-saves list locally.
   - `downloads`: write the generated Markdown file into a Downloads subfolder,
     and reveal it in the OS file manager when the user clicks "Show".

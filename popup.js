@@ -146,7 +146,7 @@ async function startJob() {
   try {
     const [{ result } = {}] = await chrome.scripting.executeScript({
       target: { tabId: TAB.id },
-      func: scrapeGeminiConversation,
+      func: scrapeConversation,
     });
     data = result;
   } catch (e) {
@@ -156,7 +156,7 @@ async function startJob() {
   }
   if (!data || !data.markdown || data.markdown.length < 40) {
     log(
-      "No Gemini content found here. Open AI Mode / let AI Overview load, or select the answer text — then Start again.",
+      "Nothing to capture on this page. Open a chat / let the answer load, or select the text you want — then Start again.",
       "err",
     );
     setView("empty");

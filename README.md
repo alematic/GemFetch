@@ -1,10 +1,11 @@
 # 💎 GemFetch
 
-A tiny Chrome (Manifest V3) extension. Click the icon on a Google search page and
-it fetches the **AI Overview** / **AI Mode** answer, cleans it up with Gemini
-(strips buttons, follow-up chips, disclaimers, filler), and saves it as a
-Markdown file into a subfolder of your **Downloads** folder. Review the title and
-synthesis first, or turn on auto-save and just walk away.
+A tiny Chrome (Manifest V3) extension. Click the icon on a Google **AI Mode /
+AI Overview** result — or a **ChatGPT / Claude / Gemini / Perplexity / Copilot**
+conversation — and it captures the exchange, cleans it up with Gemini (strips
+buttons, follow-up chips, disclaimers, filler), and saves it as a Markdown file
+into a subfolder of your **Downloads** folder. Review the title and synthesis
+first, or turn on auto-save and just walk away.
 
 The analysis runs in the background — close the popup, move the window, do
 something else; it finishes and (in auto-save mode) the file appears.
@@ -113,16 +114,18 @@ enters their own key in Settings. No shared server, no shared quota.
 - If that call fails, GemFetch still saves the raw text (with a warning).
 - Uses `activeTab` → works on any `www.google.*` domain, no host list.
 
-## Does it work on other AI pages (Claude, ChatGPT, Perplexity…)?
+## Supported pages
 
-Not out of the box. The scraper targets Google's search DOM specifically. On a
-non-Google page it will usually just report "no content found".
+Recognised and captured whole-conversation: **Google AI Mode & AI Overview**,
+**ChatGPT** (chatgpt.com), **Claude** (claude.ai), **Gemini** (gemini.google.com),
+**Perplexity**, **Copilot**, **Grok**, **Poe**, **Le Chat**, **DeepSeek**, **You.com**.
 
-**But the selection fallback works anywhere:** select the answer text on any page,
-then click the icon — GemFetch sends your selection to Gemini for the title +
-synthesis + cleanup and saves it like normal. So it doubles as a general
-"save this selection as a summarized note" tool. Proper per-site scrapers for
-other assistants would be a future addition.
+On any other page GemFetch grabs the main content region (`<main>`), and on
+*every* page a non-empty **text selection wins** — select exactly what you want,
+click the icon, and that's what gets summarized and saved.
+
+These sites change their markup constantly, so capture is best-effort. If a page
+comes through messy or truncated, select the part you care about and re-run.
 
 ## Publishing
 

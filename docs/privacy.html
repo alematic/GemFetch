@@ -25,12 +25,12 @@
 <h1>GemFetch — Privacy Policy</h1>
 <p class="muted">Last updated: 2026-09-01</p>
 
-<p>GemFetch is a browser extension that saves a Google AI Overview / AI Mode
-answer as a Markdown file on your computer.</p>
+<p>GemFetch is a browser extension that saves an AI assistant conversation
+(or selected page text) as a Markdown file on your computer.</p>
 
 <h2>What GemFetch handles</h2>
 <ul>
-  <li><strong>Page content</strong> — when you click the toolbar button, GemFetch reads the text of the Google results page you are on, to extract the answer.</li>
+  <li><strong>Page content</strong> — when you click the toolbar button, GemFetch reads the text of the page you clicked the button on, to extract the conversation.</li>
   <li><strong>Your API key</strong> — a Google AI Studio key you enter in settings.</li>
   <li><strong>Your settings</strong> — model, save-folder name, group names, extra instructions, and a short list of recent saves (including the Markdown text of those recent notes, so the Archive button works).</li>
 </ul>
@@ -53,7 +53,7 @@ answer as a Markdown file on your computer.</p>
 <h2>Permissions</h2>
 <table>
   <tr><th>Permission</th><th>Reason</th></tr>
-  <tr><td><code>activeTab</code> + <code>scripting</code></td><td>Read the current Google page's text when you click the button.</td></tr>
+  <tr><td><code>activeTab</code> + <code>scripting</code></td><td>Read the current page's text — only the tab you clicked the button on.</td></tr>
   <tr><td><code>storage</code></td><td>Save settings and the recent-saves list locally.</td></tr>
   <tr><td><code>downloads</code></td><td>Write the Markdown file into a Downloads subfolder, and reveal it on "Show".</td></tr>
   <tr><td><code>tabs</code>, <code>tabGroups</code></td><td>Read the active tab's tab-group name for foldering.</td></tr>

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "GemFetch",
-  "version": "2.0.0",
-  "description": "One click: save a Google AI Overview / AI Mode chat as Markdown into a Downloads subfolder, filed by Chrome tab group.",
+  "version": "2.1.0",
+  "description": "One click: save an AI chat (Google AI Mode/Overview, ChatGPT, Claude, Gemini, Perplexity…) as clean Markdown into a Downloads subfolder.",
   "permissions": ["activeTab", "scripting", "storage", "tabs", "tabGroups", "downloads"],
   "host_permissions": ["https://generativelanguage.googleapis.com/*"],
   "background": { "service_worker": "background.js" },
