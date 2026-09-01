@@ -2,9 +2,12 @@
 
 A tiny Chrome (Manifest V3) extension. Click the icon on a Google search page and
 it fetches the **AI Overview** / **AI Mode** answer, cleans it up with Gemini
-(strips buttons, follow-up chips, disclaimers, filler), and — after you eyeball
-the title and bullet synthesis — saves it as a Markdown file in your working
-folder.
+(strips buttons, follow-up chips, disclaimers, filler), and saves it as a
+Markdown file into a subfolder of your **Downloads** folder. Review the title and
+synthesis first, or turn on auto-save and just walk away.
+
+The analysis runs in the background — close the popup, move the window, do
+something else; it finishes and (in auto-save mode) the file appears.
 
 MIT licensed · [privacy policy](PRIVACY.md) · landing page in [`docs/`](docs/)
 
@@ -14,7 +17,7 @@ MIT licensed · [privacy policy](PRIVACY.md) · landing page in [`docs/`](docs/)
 ## Output
 
 ```
-<working folder>/260830-Understanding-GC-MS-calibration.md
+~/Downloads/<save folder>/260901-Understanding-GC-MS-calibration.md
 ```
 
 ```markdown
@@ -47,10 +50,12 @@ Images found in the answer are kept inline (or collected under `## Images` if th
 model drops them). Citation links from the answer are listed under `## Sources`
 as remote URLs — some Google-hosted image URLs and redirect links may expire.
 
-- Filename: `YYMMDD-<title-slug>.md` (`-1`, `-2` … on collision).
-- By default files go **straight into the working folder**. Turn on
-  *“File chats into per-tab-group subfolders”* in Settings to file each chat into
-  a subfolder named after the current Chrome tab group instead.
+- Filename: `YYMMDD-<title-slug>.md` (Chrome adds ` (1)` on collision).
+- Files go to `Downloads / <save folder> /` (default `GemFetch`; set it to
+  `GeminiChatsMDs` to keep an existing location). Turn on *“File chats into
+  per-tab-group subfolders”* for an extra `…/<tab group>/` level.
+- Uses the browser's **downloads** mechanism, so **no folder permission is ever
+  requested**. A brief entry appears in Chrome's download tray as each file lands.
 
 ## Install
 
@@ -64,20 +69,21 @@ steps below are only for running the unpacked source before/independently of tha
 2. **Load unpacked** → select this `gemfetch` folder.
 3. Card → **Details** → **Extension options**:
    - Paste a free **Google AI Studio API key** (`aistudio.google.com/apikey`), Save.
-   - Click **Refresh list** to load the models your key can use, pick one.
-   - Optionally enable tab-group subfolders / set the Archive name.
-   - **Choose folder…** → pick your working folder, approve the prompt.
+   - Click **Refresh** to load the models your key can use, pick one.
+   - Set the **Save folder** (a subfolder name under Downloads).
+   - Optionally: **auto-save**, tab-group subfolders, Archive name.
 4. Pin the extension.
 
 ## Use
 
 - On a Google search, open **AI Mode** or let the **AI Overview** load.
-- Click the GemFetch icon. It reads the page and summarizes, then shows an
-  editable **Title** and **Synthesis** (one bullet per line).
-- Tweak them, click **Save**.
-- **Recent** lists the last 8 saves with a **Move** button to relocate a file
-  (to the Archive subfolder, another tab-group subfolder, or the folder root).
-- If Chrome forgot folder permission, reopen the popup to re-grant.
+- Click the GemFetch icon. It reads the page and summarizes in the background.
+- **Review mode** (default): edit the **Title** / **Synthesis** (one bullet per
+  line), click **Save**. **Auto-save mode**: the file is written as soon as the
+  summary is ready — nothing else to do.
+- **Stop analysis** cancels an in-flight run; **Start again** re-runs it.
+- **Recent** lists the last saves: **Show** reveals the file in your file
+  manager; **→ Archive** re-saves a copy into the Archive subfolder.
 
 ## API key, quotas, other users
 
@@ -102,9 +108,9 @@ enters their own key in Settings. No shared server, no shared quota.
 - Google's markup is unlabelled and shifts often; the scraper is best-effort. If
   it grabs junk or misses content, **select the answer text on the page first**,
   then reopen — a non-empty selection is used verbatim.
-- Local only. API key + folder handle never leave the browser; the sole outbound
+- Local only. API key + settings never leave the browser; the sole outbound
   request is the cleanup/summary call to Google's Generative Language API.
-- If that call fails, the popup says so and still lets you save the raw text.
+- If that call fails, GemFetch still saves the raw text (with a warning).
 - Uses `activeTab` → works on any `www.google.*` domain, no host list.
 
 ## Does it work on other AI pages (Claude, ChatGPT, Perplexity…)?

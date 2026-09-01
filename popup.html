@@ -10,6 +10,7 @@
     textarea { resize: vertical; }
     button { padding: 7px 12px; cursor: pointer; font-size: 13px; }
     #save { width: 100%; margin-top: 10px; }
+    #stop, #restart { margin: 6px 0; }
     #log { margin: 8px 0; white-space: pre-wrap; color: #333; }
     .err { color: #b3261e; }
     .ok { color: #187d3c; }
@@ -26,7 +27,8 @@
 <body>
   <h1>GemFetch</h1>
   <div id="log">Reading page…</div>
-  <button id="grant" style="display:none">Grant access to working folder</button>
+  <button id="stop" style="display:none">■ Stop analysis</button>
+  <button id="restart" style="display:none">↻ Start again</button>
 
   <div id="editor">
     <label for="title">Title</label>
@@ -42,7 +44,7 @@
   </div>
 
   <div class="recent" id="recentWrap" style="display:none">
-    <h2>Recent — move to another folder</h2>
+    <h2>Recent</h2>
     <div id="recent"></div>
   </div>
 

@@ -23,7 +23,7 @@
 <body>
 <main>
 <h1>GemFetch — Privacy Policy</h1>
-<p class="muted">Last updated: 2026-08-30</p>
+<p class="muted">Last updated: 2026-09-01</p>
 
 <p>GemFetch is a browser extension that saves a Google AI Overview / AI Mode
 answer as a Markdown file on your computer.</p>
@@ -32,14 +32,14 @@ answer as a Markdown file on your computer.</p>
 <ul>
   <li><strong>Page content</strong> — when you click the toolbar button, GemFetch reads the text of the Google results page you are on, to extract the answer.</li>
   <li><strong>Your API key</strong> — a Google AI Studio key you enter in settings.</li>
-  <li><strong>Your settings</strong> — model, working-folder name/path, group names, extra instructions, and a short list of recent saves.</li>
+  <li><strong>Your settings</strong> — model, save-folder name, group names, extra instructions, and a short list of recent saves (including the Markdown text of those recent notes, so the Archive button works).</li>
 </ul>
 
 <h2>Where it goes</h2>
 <ul>
-  <li><strong>Stays on your device:</strong> API key, settings, recent-saves list (<code>chrome.storage.local</code>), folder handle (<code>IndexedDB</code>). Never sent to the author or any third party.</li>
+  <li><strong>Stays on your device:</strong> API key, settings and the recent-saves list (<code>chrome.storage.local</code>). Never sent to the author or any third party.</li>
   <li><strong>Sent to Google:</strong> the scraped page text and your query go to <code>generativelanguage.googleapis.com</code> using <em>your</em> key, only to generate the title, synthesis and transcript. Governed by <a href="https://ai.google.dev/gemini-api/terms">Google's API terms</a>.</li>
-  <li><strong>Written to disk:</strong> the Markdown file goes only to the folder you selected.</li>
+  <li><strong>Written to disk:</strong> the Markdown file is saved, via the browser's download mechanism, into a subfolder of your Downloads folder.</li>
 </ul>
 
 <h2>What GemFetch does not do</h2>
@@ -55,7 +55,8 @@ answer as a Markdown file on your computer.</p>
   <tr><th>Permission</th><th>Reason</th></tr>
   <tr><td><code>activeTab</code> + <code>scripting</code></td><td>Read the current Google page's text when you click the button.</td></tr>
   <tr><td><code>storage</code></td><td>Save settings and the recent-saves list locally.</td></tr>
-  <tr><td><code>tabs</code>, <code>tabGroups</code></td><td>Read the active tab's tab-group name for foldering; open the working folder in a tab.</td></tr>
+  <tr><td><code>downloads</code></td><td>Write the Markdown file into a Downloads subfolder, and reveal it on "Show".</td></tr>
+  <tr><td><code>tabs</code>, <code>tabGroups</code></td><td>Read the active tab's tab-group name for foldering.</td></tr>
   <tr><td>host <code>generativelanguage.googleapis.com</code></td><td>Call the Gemini API with your key.</td></tr>
 </table>
 

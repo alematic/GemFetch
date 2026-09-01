@@ -17,16 +17,16 @@ function fillModels(list, selected) {
 
 async function load() {
   const cfg = await chrome.storage.local.get([
-    "apiKey", "model", "modelList", "folderName", "customPrompt", "folderPath",
+    "apiKey", "model", "modelList", "customPrompt", "downloadDir", "autoSave",
     "useGroups", "defaultGroup", "archiveGroup",
   ]);
   $("key").value = cfg.apiKey || "";
   $("customPrompt").value = cfg.customPrompt || "";
-  $("folderPath").value = cfg.folderPath || "";
+  $("downloadDir").value = cfg.downloadDir || "GemFetch";
+  $("autoSave").checked = !!cfg.autoSave;
   $("useGroups").checked = !!cfg.useGroups;
   $("defaultGroup").value = cfg.defaultGroup || "Inbox";
   $("archiveGroup").value = cfg.archiveGroup || "Archive";
-  $("folder").textContent = cfg.folderName ? `✓ ${cfg.folderName}` : "none selected";
   fillModels(cfg.modelList || [], cfg.model || "");
   if (cfg.apiKey && !(cfg.modelList || []).length) refresh();
 }
@@ -47,24 +47,12 @@ async function refresh() {
 
 $("refresh").addEventListener("click", refresh);
 
-$("pick").addEventListener("click", async () => {
-  try {
-    const handle = await window.showDirectoryPicker({ mode: "readwrite", id: "gemfetch-folder" });
-    await ensurePermission(handle);
-    await idbSet("dirHandle", handle);
-    await chrome.storage.local.set({ folderName: handle.name });
-    $("folder").textContent = `✓ ${handle.name}`;
-    $("status").textContent = "Folder set.";
-  } catch (e) {
-    if (e.name !== "AbortError") $("status").textContent = "Error: " + e.message;
-  }
-});
-
 $("save").addEventListener("click", async () => {
   await chrome.storage.local.set({
     apiKey: $("key").value.trim(),
     customPrompt: $("customPrompt").value.trim(),
-    folderPath: $("folderPath").value.trim(),
+    downloadDir: $("downloadDir").value.trim() || "GemFetch",
+    autoSave: $("autoSave").checked,
     model: $("model").value || "",
     useGroups: $("useGroups").checked,
     defaultGroup: $("defaultGroup").value.trim() || "Inbox",

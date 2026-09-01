@@ -26,10 +26,12 @@ Markdown note on your computer — in one click.
 • **Cleaned up.** GemFetch uses the Gemini API (with your own free key) to strip
   buttons, follow-up chips, disclaimers and filler, and to rewrite the exchange
   as readable Markdown.
-• **Your folder.** Files are written straight into a working folder you choose,
-  named `YYMMDD-title.md`.
-• **Organised.** Optionally file each note into a subfolder named after the
-  current Chrome tab group, and move recent notes into an Archive.
+• **Your folder, no prompts.** Files land in a subfolder of your Downloads,
+  named `YYMMDD-title.md`. No folder-access permission is ever requested.
+• **Runs in the background.** Start it and close the popup; the analysis
+  finishes on its own. Turn on auto-save for zero-touch capture.
+• **Organised.** Optionally an extra subfolder per Chrome tab group, plus an
+  Archive button on recent notes.
 • **Private by design.** Your API key and settings never leave your browser.
   The only network request is the summarization call to Google, using your key.
   No analytics, no servers, no tracking. Open source (MIT).
@@ -47,8 +49,9 @@ free tier is rate-limited; heavy users can enable billing on their own key.
   - `activeTab` + `scripting`: read the current Google page's text when the user
     clicks the button.
   - `storage`: store the user's settings and recent-saves list locally.
-  - `tabs` / `tabGroups`: read the active tab's tab-group name for foldering;
-    open the working folder in a tab.
+  - `downloads`: write the generated Markdown file into a Downloads subfolder,
+    and reveal it in the OS file manager when the user clicks "Show".
+  - `tabs` / `tabGroups`: read the active tab's tab-group name for foldering.
   - Host `generativelanguage.googleapis.com`: send page text to the Gemini API
     with the user's key to generate the summary.
 - **Remote code:** No.

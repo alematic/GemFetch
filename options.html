@@ -43,30 +43,26 @@
   <textarea id="customPrompt" rows="3" placeholder="e.g. Always answer in German. Keep synthesis to max 4 bullets. Add a 'Risks' bullet."></textarea>
   <div class="muted">Appended to GemFetch's built-in cleanup/brevity instructions on every request.</div>
 
+  <label for="downloadDir">Save folder (subfolder of your Downloads)</label>
+  <input id="downloadDir" type="text" placeholder="GemFetch" />
+  <div class="muted">
+    Files are written to <code>Downloads / &lt;this&gt; / …</code>. No folder
+    permission is ever needed. Use e.g. <code>GeminiChatsMDs</code> to keep your
+    current location.
+  </div>
+
+  <label class="inline"><input id="autoSave" type="checkbox" /> Save automatically (skip the review step)</label>
+  <div class="muted">On = click the icon and walk away; the file is written as soon as the summary is ready. Off = review/edit the title and synthesis, then click Save.</div>
+
   <label class="inline"><input id="useGroups" type="checkbox" /> File chats into per-tab-group subfolders</label>
-  <div class="muted">Off = every chat goes straight into the working folder. On = a subfolder named after the current Chrome tab group.</div>
+  <div class="muted">On = an extra subfolder named after the current Chrome tab group.</div>
 
   <label for="archiveGroup">Archive subfolder name</label>
   <input id="archiveGroup" type="text" placeholder="Archive" />
-  <div class="muted">Used by the “Move” button in the popup to file a chat away.</div>
+  <div class="muted">The popup's “→ Archive” button re-saves a copy of a recent note into this subfolder.</div>
 
   <label for="defaultGroup">Default group name (tab not in a group)</label>
   <input id="defaultGroup" type="text" placeholder="Inbox" />
-
-  <label>Working folder</label>
-  <div class="row">
-    <button id="pick" type="button">Choose folder…</button>
-    <span id="folder" class="muted">none selected</span>
-  </div>
-
-  <label for="folderPath">Working folder — full path (optional)</label>
-  <input id="folderPath" type="text" placeholder="C:\Users\you\Downloads\GeminiChatsMDs" />
-  <div class="muted">
-    Enables the <b>Open</b> button in the popup (opens the folder in a browser tab).
-    Chrome can't launch Explorer, and it can't read the real path itself, so paste it here once.
-    You must also enable <b>“Allow access to file URLs”</b> on this extension's
-    <code>chrome://extensions</code> details page.
-  </div>
 
   <p><button id="save">Save settings</button> <span id="status" class="ok"></span></p>
 
