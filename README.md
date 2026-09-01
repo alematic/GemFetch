@@ -37,10 +37,12 @@ saved: 2026-08-30T14:32:01.000Z
 - ...
 
 ## Conversation
-### Prompt
+### Prompt 1
 ...
-### Response
+### Response 1
 ... (images kept inline as ![](url))
+### Prompt 2
+...
 
 ## Sources
 1. [Page title](https://example.com/article)

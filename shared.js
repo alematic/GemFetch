@@ -119,7 +119,7 @@ KEEP:
 Return JSON with:
 - "title": a concise, specific, descriptive title (max ~12 words, no surrounding quotes, no trailing punctuation).
 - "synthesis": 3-7 bullet points. Each is a TERSE FRAGMENT, not a full sentence — aim for 12 words or fewer. Drop lead-ins like "The item is", "It is", "This means"; drop articles where readable. Lead with the fact, number, or name. Good: "Used value roughly $20-50 USD (~17-43 CHF)". Bad: "The used market value for fully functional units generally ranges between $20 and $50 USD.".
-- "conversation": the cleaned answer as tight, readable Markdown — cut filler and hedging hard. If distinct prompt/response turns exist, format each as "### Prompt" then "### Response". No preamble, no closing remarks.`;
+- "conversation": the cleaned exchange as tight, readable Markdown — cut filler and hedging hard. Format each turn with a numbered heading: "### Prompt 1", then "### Response 1", "### Prompt 2", "### Response 2", and so on, incrementing per round. If there is only a single answer with no visible user question, use "### Response 1" alone. No preamble, no closing remarks.`;
 
 function _abortableSleep(ms, signal) {
   return new Promise((res, rej) => {
