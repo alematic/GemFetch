@@ -7,6 +7,56 @@ importScripts("shared.js");
 let ABORT = null;
 let keepAlive = null;
 
+// --- downloads: force the filename Chrome actually uses ------------------
+// chrome.downloads.download's `filename` option is unreliable for blob/data
+// URLs (Chrome falls back to "download.md"), so we authoritatively set it in
+// onDeterminingFilename, matching our own downloads by their blob URL.
+const PENDING_DL = new Map(); // url -> relPath
+
+try {
+  chrome.downloads.onDeterminingFilename.addListener((item, suggest) => {
+    const relPath = PENDING_DL.get(item.url);
+    if (relPath) suggest({ filename: relPath, conflictAction: "uniquify" });
+    else suggest();
+  });
+} catch (e) {
+  /* event unavailable — fall back to the download() filename option */
+}
+
+function downloadMarkdown(relPath, md) {
+  let url;
+  try {
+    url = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
+  } catch (e) {
+    url = "data:text/markdown;charset=utf-8," + encodeURIComponent(md);
+  }
+  PENDING_DL.set(url, relPath);
+  const cleanup = () => {
+    PENDING_DL.delete(url);
+    try { URL.revokeObjectURL(url); } catch (e) {}
+  };
+  return new Promise((resolve, reject) => {
+    chrome.downloads.download({ url, filename: relPath, conflictAction: "uniquify", saveAs: false }, (id) => {
+      if (chrome.runtime.lastError || id == null) {
+        cleanup();
+        reject(new Error(chrome.runtime.lastError?.message || "download failed"));
+        return;
+      }
+      const done = (d) => {
+        if (d.id === id && d.state && d.state.current !== "in_progress") {
+          chrome.downloads.onChanged.removeListener(done);
+          cleanup();
+        }
+      };
+      chrome.downloads.onChanged.addListener(done);
+      setTimeout(cleanup, 120000);
+      chrome.downloads.search({ id }, (items) => {
+        resolve({ id, filename: (items && items[0] && items[0].filename) || relPath });
+      });
+    });
+  });
+}
+
 function startKeepAlive() {
   if (keepAlive) return;
   keepAlive = setInterval(() => chrome.runtime.getPlatformInfo(() => {}), 20000);

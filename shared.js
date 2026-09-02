@@ -61,45 +61,8 @@ function safeSegment(name, fallback) {
   return cleaned || fallback || "GemFetch";
 }
 
-// --- downloads --------------------------------------------------------------
-
-// Write `md` to <Downloads>/<relPath>. No permission prompt, ever.
-// Returns { id, filename } (filename is what Chrome actually used).
-function downloadMarkdown(relPath, md) {
-  let url, isBlob;
-  try {
-    url = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
-    isBlob = true;
-  } catch (e) {
-    url = "data:text/markdown;charset=utf-8," + encodeURIComponent(md);
-    isBlob = false;
-  }
-  return new Promise((resolve, reject) => {
-    chrome.downloads.download(
-      { url, filename: relPath, conflictAction: "uniquify", saveAs: false },
-      (id) => {
-        if (chrome.runtime.lastError || id == null) {
-          if (isBlob) try { URL.revokeObjectURL(url); } catch (e) {}
-          reject(new Error(chrome.runtime.lastError?.message || "download failed"));
-          return;
-        }
-        if (isBlob) {
-          const done = (d) => {
-            if (d.id === id && d.state && d.state.current !== "in_progress") {
-              chrome.downloads.onChanged.removeListener(done);
-              try { URL.revokeObjectURL(url); } catch (e) {}
-            }
-          };
-          chrome.downloads.onChanged.addListener(done);
-          setTimeout(() => { try { URL.revokeObjectURL(url); } catch (e) {} }, 120000);
-        }
-        chrome.downloads.search({ id }, (items) => {
-          resolve({ id, filename: (items && items[0] && items[0].filename) || relPath });
-        });
-      },
-    );
-  });
-}
+// (downloadMarkdown lives in background.js — it needs the SW-scoped
+//  onDeterminingFilename listener to force the filename Chrome uses.)
 
 // --- Gemini summarization --------------------------------------------------
 
