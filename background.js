@@ -100,7 +100,17 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return false;
 });
 
-async function runSummarize({ scrapeData, group, tabId }) {
+async function runSummarize(msg) {
+  try {
+    await _runSummarize(msg);
+  } catch (e) {
+    await patchJob({ phase: "error", error: (e && e.message) || String(e) });
+    stopKeepAlive();
+    ABORT = null;
+  }
+}
+
+async function _runSummarize({ scrapeData, group, tabId }) {
   if (ABORT) ABORT.abort();
   ABORT = new AbortController();
   startKeepAlive();
@@ -172,9 +182,10 @@ async function writeFile(title, synthesis, scrapeData, conversation, group) {
   );
   const relPath = `${root}/${sub}${datePrefix(now)}-${slug(t)}.md`;
   const res = await downloadMarkdown(relPath, md);
-  // Chrome returns the absolute path; show just the tail from the root folder.
-  const shown = res.filename.replace(/\\/g, "/").split("/" + root + "/").pop();
-  const savedAs = `${root}/${shown}`;
+  // Chrome hands back an absolute path (uniquified); show the tail from `root`.
+  const abs = (res.filename || "").replace(/\\/g, "/");
+  const marker = "/" + root + "/";
+  const savedAs = abs.includes(marker) ? root + "/" + abs.split(marker).pop() : relPath;
 
   const { recent = [] } = await chrome.storage.local.get("recent");
   recent.unshift({
