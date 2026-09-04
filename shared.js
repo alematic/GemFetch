@@ -79,10 +79,23 @@ KEEP:
 - The full exchange: every user turn and every assistant turn, in order — explanations, lists, tables, code blocks, and inline citation links that belong to the content.
 - Every image, from BOTH the user's prompts and the answers: any Markdown image \`![alt](url)\` in the raw text must appear UNCHANGED and in the same position in your "conversation" output. Never drop, rewrite or invent image URLs.
 
-Return JSON with:
-- "title": a concise, specific, descriptive title (max ~12 words, no surrounding quotes, no trailing punctuation).
-- "synthesis": 3-7 bullet points. Each is a TERSE FRAGMENT, not a full sentence — aim for 12 words or fewer. Drop lead-ins like "The item is", "It is", "This means"; drop articles where readable. Lead with the fact, number, or name. Good: "Used value roughly $20-50 USD (~17-43 CHF)". Bad: "The used market value for fully functional units generally ranges between $20 and $50 USD.".
-- "conversation": the cleaned exchange as tight, readable Markdown — cut filler and hedging hard. Format each turn with a numbered heading: "### Prompt 1", then "### Response 1", "### Prompt 2", "### Response 2", and so on, incrementing per round. If there is only a single answer with no visible user question, use "### Response 1" alone. No preamble, no closing remarks.`;
+Output PLAIN TEXT in EXACTLY this structure — no JSON, no wrapping code fence, nothing before "TITLE:" and nothing after the conversation:
+
+TITLE: <concise, specific, descriptive title, max ~12 words, no quotes, no trailing punctuation>
+
+SYNTHESIS:
+- <terse fragment, not a full sentence, ~12 words or fewer; drop lead-ins like "The item is" / "It is" / "This means"; lead with the fact, number or name>
+- <3 to 7 of these>
+
+CONVERSATION:
+### Prompt 1
+<the user's first message, cleaned>
+### Response 1
+<the assistant's first answer, cleaned Markdown — keep lists, tables, code blocks, image \`![alt](url)\` lines unchanged and in place>
+### Prompt 2
+<...and so on, incrementing per round>
+
+If there is only a single answer with no visible user question, use "### Response 1" alone.`;
 
 function _abortableSleep(ms, signal) {
   return new Promise((res, rej) => {
@@ -119,18 +132,7 @@ async function synthesize(apiKey, model, data, customPrompt, signal) {
         ],
       },
     ],
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: "OBJECT",
-        properties: {
-          title: { type: "STRING" },
-          synthesis: { type: "ARRAY", items: { type: "STRING" } },
-          conversation: { type: "STRING" },
-        },
-        required: ["title", "synthesis", "conversation"],
-      },
-    },
+    generationConfig: { temperature: 0.3 },
   };
 
   let r, raw;
@@ -167,13 +169,36 @@ async function synthesize(apiKey, model, data, customPrompt, signal) {
   } catch (e) {
     throw new Error("Bad API response");
   }
-  let txt = j.candidates?.[0]?.content?.parts?.[0]?.text;
+  const cand = j.candidates?.[0];
+  let txt = cand?.content?.parts?.[0]?.text;
   if (!txt) {
-    const fb = j.promptFeedback || j.candidates?.[0]?.finishReason || j;
+    const fb = j.promptFeedback || cand?.finishReason || j;
     throw new Error("No content: " + JSON.stringify(fb).slice(0, 200));
   }
-  txt = txt.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-  return JSON.parse(txt);
+  // Strip an outer wrapping code fence only if the response opens with one
+  // (don't clobber a legit closing fence of a trailing code block).
+  const lead = txt.match(/^```[^\n]*\n/);
+  if (lead) txt = txt.slice(lead[0].length).replace(/\n```\s*$/, "");
+  txt = txt.trim();
+
+  // Plain-text delimited format: TITLE: / SYNTHESIS: / CONVERSATION:
+  const titleM = txt.match(/TITLE:\s*(.+?)\s*(?:\n|$)/);
+  const synM = txt.match(/\nSYNTHESIS:\s*([\s\S]*?)(?:\n\s*CONVERSATION:|$)/i);
+  const convM = txt.match(/\nCONVERSATION:\s*([\s\S]*)$/i);
+
+  const title = titleM ? titleM[1].replace(/^["']|["']$/g, "").trim() : "";
+  const synthesis = synM
+    ? synM[1]
+        .split("\n")
+        .map((l) => l.trim())
+        .filter((l) => /^[-*]\s+/.test(l))
+        .map((l) => l.replace(/^[-*]\s+/, "").trim())
+    : [];
+  let conversation = convM ? convM[1].trim() : txt;
+  if (cand.finishReason && cand.finishReason !== "STOP")
+    conversation += `\n\n> _(Transcript cut off by the model: ${cand.finishReason}.)_`;
+
+  return { title, synthesis, conversation };
 }
 
 // Try the configured model; on a 404 (retired) switch to Google's suggested
