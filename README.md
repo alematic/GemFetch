@@ -14,11 +14,16 @@ first, or turn on auto-save and just walk away.
 The analysis runs in the background — close the popup, move the window, do
 something else; it finishes and (in auto-save mode) the file appears.
 
-MIT licensed · [privacy policy](PRIVACY.md) · landing page in [`docs/`](docs/)
+MIT licensed · [Website](https://alematic.github.io/GemFetch/) ·
+[privacy policy](PRIVACY.md) · [landing page source](docs/)
 
-> <img src="icons/tip-jar.svg" width="40" height="40" align="left" alt="a little gem happily gulping a coin">
-> **Support:** GemFetch is free and open source. Feed the gem — if it saves you
-> time, [donate via PayPal](https://paypal.me/afulciniti95).
+<img src="icons/tip-jar.svg" width="64" height="64" align="left" alt="a little gem happily gulping a coin">
+
+**Support:** GemFetch is free and open source. Feed the gem — if it saves you
+time, [donate via PayPal](https://paypal.me/afulciniti95).
+
+<br clear="left" />
+<br />
 
 ## Output
 
