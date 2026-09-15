@@ -18,10 +18,18 @@
     .ok { color: #187d3c; }
     code { background: #f2f2f2; padding: 1px 4px; border-radius: 3px; }
     a { color: #1a73e8; }
+    h2 { font-size: 15px; margin: 28px 0 4px; }
+    hr { margin: 28px 0 16px; border: none; border-top: 1px solid #e2e2e8; }
+    .links { color: #666; }
   </style>
 </head>
 <body>
   <h1>GemFetch</h1>
+  <div class="muted">
+    <a href="https://alematic.github.io/GemFetch/" target="_blank">Website</a> ·
+    <a href="https://github.com/alematic/GemFetch" target="_blank">Source on GitHub</a> ·
+    <a href="https://paypal.me/afulciniti95" target="_blank">Donate</a>
+  </div>
 
   <label for="key">Google AI Studio API key</label>
   <input id="key" type="password" placeholder="AIza..." autocomplete="off" />
@@ -65,6 +73,25 @@
   <input id="defaultGroup" type="text" placeholder="Inbox" />
 
   <p><button id="save">Save settings</button> <span id="status" class="ok"></span></p>
+
+  <hr />
+  <h2>Feedback</h2>
+  <label for="fbType">Type</label>
+  <select id="fbType">
+    <option>Bug report</option>
+    <option>Feature idea</option>
+    <option>Something else</option>
+  </select>
+  <label for="fbMsg">Message</label>
+  <textarea id="fbMsg" rows="4" placeholder="What happened, or what would help?"></textarea>
+  <label for="fbEmail">Your email (optional, if you'd like a reply)</label>
+  <input id="fbEmail" type="text" placeholder="you@example.com" />
+  <p><button id="fbSend" type="button">Send feedback</button></p>
+  <div class="muted">
+    Opens your email app with the message pre-filled — no server, nothing is
+    sent automatically. Prefer GitHub?
+    <a href="https://github.com/alematic/GemFetch/issues" target="_blank">Open an issue</a> instead.
+  </div>
 
   <script src="shared.js"></script>
   <script src="options.js"></script>

@@ -1,0 +1,47 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A little gem happily gulping down a coin">
+  <defs>
+    <linearGradient id="gg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6a9cff"/>
+      <stop offset="1" stop-color="#2149c4"/>
+    </linearGradient>
+    <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe27a"/>
+      <stop offset="1" stop-color="#f2b93b"/>
+    </linearGradient>
+    <clipPath id="mouthClip"><rect x="30" y="56" width="60" height="18" rx="3"/></clipPath>
+  </defs>
+
+  <!-- the gem body, bobbing happily -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 0; 0 3; 0 0" dur="1.2s" repeatCount="indefinite"/>
+    <polygon points="60,30 96,64 60,104 24,64" fill="url(#gg)"/>
+    <polygon points="60,30 96,64 60,104" fill="#1c3fa8" opacity="0.25"/>
+
+    <!-- eyes: closed happy arcs -->
+    <path d="M46,58 q4,-6 8,0" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M66,58 q4,-6 8,0" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+    <!-- mouth: opens on the beat to "gulp" the coin -->
+    <ellipse cx="60" cy="72" rx="10" ry="4" fill="#12246e">
+      <animate attributeName="ry" values="2;10;2;2" keyTimes="0;0.5;0.6;1" dur="1.2s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+
+  <!-- the coin, dropping in on a loop -->
+  <g>
+    <animateTransform attributeName="transform" type="translate" values="0 -60; 0 -6; 0 -6; 0 8" keyTimes="0;0.45;0.55;0.62" dur="1.2s" repeatCount="indefinite"/>
+    <g>
+      <animateTransform attributeName="transform" type="rotate" values="0 60 62; 360 60 62" dur="1.2s" repeatCount="indefinite" additive="sum"/>
+      <circle cx="60" cy="62" r="11" fill="url(#coin)" stroke="#c98a12" stroke-width="1.5"/>
+      <text x="60" y="67" font-family="Georgia, serif" font-size="13" font-weight="700" fill="#8a5a08" text-anchor="middle">$</text>
+    </g>
+    <animate attributeName="opacity" values="1;1;1;0" keyTimes="0;0.55;0.6;0.62" dur="1.2s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- a happy little "+1" sparkle right after the gulp -->
+  <text x="86" y="50" font-family="Segoe UI, system-ui, sans-serif" font-size="14" font-weight="700" fill="#2149c4" opacity="0">
+    +1
+    <animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.6;0.75;1" dur="1.2s" repeatCount="indefinite"/>
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 -10;0 -16" keyTimes="0;0.6;0.75;1" dur="1.2s" repeatCount="indefinite"/>
+  </text>
+</svg>

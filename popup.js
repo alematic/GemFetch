@@ -9,6 +9,7 @@ const stopEl = document.getElementById("stop");
 const restartEl = document.getElementById("restart");
 const recentEl = document.getElementById("recent");
 const recentWrap = document.getElementById("recentWrap");
+const modelSelEl = document.getElementById("modelSel");
 
 let CFG = {};
 let TAB = null;
@@ -17,6 +18,25 @@ function log(msg, cls) {
   logEl.textContent = msg;
   logEl.className = cls || "";
 }
+
+function populateModelSelect() {
+  const list = Array.isArray(CFG.modelList) ? [...CFG.modelList] : [];
+  if (CFG.model && !list.includes(CFG.model)) list.unshift(CFG.model);
+  if (!list.length) list.push(CFG.model || "gemini-flash-latest");
+  modelSelEl.innerHTML = "";
+  list.forEach((m) => {
+    const o = document.createElement("option");
+    o.value = m;
+    o.textContent = m;
+    if (m === CFG.model) o.selected = true;
+    modelSelEl.appendChild(o);
+  });
+}
+
+modelSelEl.addEventListener("change", () => {
+  CFG.model = modelSelEl.value;
+  chrome.storage.local.set({ model: modelSelEl.value });
+});
 
 document.getElementById("opts").addEventListener("click", (e) => {
   e.preventDefault();
@@ -85,7 +105,12 @@ async function renderRecent() {
       }
     });
 
-    row.append(name, showBtn, arcBtn);
+    const notesBtn = document.createElement("button");
+    notesBtn.textContent = "NotesMD";
+    notesBtn.title = "Open notesmd.cc — drag the file in to browse/edit it there";
+    notesBtn.addEventListener("click", () => chrome.tabs.create({ url: "https://notesmd.cc" }));
+
+    row.append(name, showBtn, arcBtn, notesBtn);
     recentEl.appendChild(row);
   });
 }
@@ -164,7 +189,13 @@ async function startJob() {
   }
 
   const group = CFG.useGroups ? groupEl.value : "";
-  await chrome.runtime.sendMessage({ type: "summarize", scrapeData: data, group, tabId: TAB.id });
+  await chrome.runtime.sendMessage({
+    type: "summarize",
+    scrapeData: data,
+    group,
+    tabId: TAB.id,
+    model: modelSelEl.value,
+  });
   log("Analyzing… you can close this popup — it keeps running in the background.");
   setView("running");
 }
@@ -200,14 +231,27 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 async function init() {
   CFG = await chrome.storage.local.get([
-    "apiKey", "model", "customPrompt", "downloadDir", "autoSave",
+    "apiKey", "model", "modelList", "customPrompt", "downloadDir", "autoSave",
     "useGroups", "defaultGroup", "archiveGroup",
   ]);
   [TAB] = await chrome.tabs.query({ active: true, currentWindow: true });
+  populateModelSelect();
 
   if (!CFG.apiKey) {
     log("Open Settings and paste your Google AI Studio API key.", "err");
     return;
+  }
+
+  if (!(CFG.modelList || []).length) {
+    // Best-effort background refresh so the picker isn't stuck on one model
+    // just because Settings → Refresh was never clicked.
+    discoverModels(CFG.apiKey)
+      .then((list) => {
+        CFG.modelList = list;
+        chrome.storage.local.set({ modelList: list });
+        populateModelSelect();
+      })
+      .catch(() => {});
   }
 
   try {

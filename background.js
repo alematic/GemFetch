@@ -110,7 +110,7 @@ async function runSummarize(msg) {
   }
 }
 
-async function _runSummarize({ scrapeData, group, tabId }) {
+async function _runSummarize({ scrapeData, group, tabId, model }) {
   if (ABORT) ABORT.abort();
   ABORT = new AbortController();
   startKeepAlive();
@@ -130,6 +130,7 @@ async function _runSummarize({ scrapeData, group, tabId }) {
     },
   });
   const cfg = await chrome.storage.local.get(["apiKey", "model", "customPrompt", "autoSave"]);
+  if (model) cfg.model = model; // per-run override from the popup's model picker
   let out, warn = "";
   try {
     out = await summarizeWithFallback(cfg, scrapeData, ABORT.signal);

@@ -14,6 +14,11 @@ Save any AI chat (Google AI Mode, ChatGPT, Claude, Gemini, Perplexity…) as cle
 
 **Language:** English
 
+**Website / homepage URL** (dashboard field under "Additional fields" on the
+store-listing tab — this is what shows as the extension's linked site on its
+Chrome Web Store page):
+`https://alematic.github.io/GemFetch/`
+
 ---
 
 ## Detailed description

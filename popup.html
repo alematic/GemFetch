@@ -22,10 +22,19 @@
     .row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
     .row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .row select, .row button { font-size: 11px; padding: 2px 4px; }
+    #modelRow { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+    #modelRow label { margin: 0; white-space: nowrap; }
+    #modelSel { flex: 1; padding: 5px; font-size: 12px; }
   </style>
 </head>
 <body>
   <h1>GemFetch</h1>
+
+  <div id="modelRow">
+    <label for="modelSel">Model</label>
+    <select id="modelSel"></select>
+  </div>
+
   <div id="log">Reading page…</div>
   <button id="stop" style="display:none">■ Stop analysis</button>
   <button id="restart" style="display:none">↻ Start again</button>

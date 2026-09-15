@@ -62,4 +62,21 @@ $("save").addEventListener("click", async () => {
   setTimeout(() => ($("status").textContent = ""), 2000);
 });
 
+$("fbSend").addEventListener("click", () => {
+  const type = $("fbType").value;
+  const msg = $("fbMsg").value.trim();
+  if (!msg) {
+    $("status").textContent = "Write a message first.";
+    return;
+  }
+  const email = $("fbEmail").value.trim();
+  const version = chrome.runtime.getManifest().version;
+  const subject = encodeURIComponent(`GemFetch feedback: ${type}`);
+  const lines = [msg, "", `— sent from GemFetch v${version}`];
+  if (email) lines.push(`Reply to: ${email}`);
+  const body = encodeURIComponent(lines.join("\n"));
+  chrome.tabs.create({ url: `mailto:fulcinitialessandro@gmail.com?subject=${subject}&body=${body}` });
+  $("fbMsg").value = "";
+});
+
 load();

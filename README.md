@@ -16,8 +16,9 @@ something else; it finishes and (in auto-save mode) the file appears.
 
 MIT licensed · [privacy policy](PRIVACY.md) · landing page in [`docs/`](docs/)
 
-> **Support:** GemFetch is free and open source. If it helps you,
-> [donate via PayPal](https://paypal.me/afulciniti95).
+> <img src="icons/tip-jar.svg" width="40" height="40" align="left" alt="a little gem happily gulping a coin">
+> **Support:** GemFetch is free and open source. Feed the gem — if it saves you
+> time, [donate via PayPal](https://paypal.me/afulciniti95).
 
 ## Output
 

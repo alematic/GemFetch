@@ -47,4 +47,6 @@ as a Markdown file on your computer.
 
 ## Contact
 
-Open an issue at the project's GitHub repository.
+Open an issue at the project's GitHub repository, or use the **Feedback** form on
+the Settings page — it opens your own email app with a pre-filled message; it does
+not send anything on its own, and no server is involved.

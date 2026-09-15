@@ -8,3 +8,6 @@ Thumbs.db
 # local notes / keys (never commit secrets)
 *.local
 secrets.*
+
+# Web Store screenshot staging — curate before adding any to the repo
+/screenshots/
