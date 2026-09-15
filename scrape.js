@@ -30,16 +30,21 @@ function scrapeConversation() {
 
   const SKIP = new Set(["script","style","noscript","svg","input","textarea","select","form","nav","header","footer"]);
 
+  // Only ever capture http(s) image URLs. `data:` URIs are almost always
+  // tracking pixels / spacer gifs / loading placeholders with no natural
+  // size to filter on, and embedding one verbatim dumps a huge base64 blob
+  // as literal text into the saved Markdown (confirmed in the wild: a 1x1
+  // PNG tracking pixel leaking through as unreadable text in a note).
   function imgSrc(el) {
     let s = el.currentSrc || el.getAttribute("src") || el.getAttribute("data-src") || el.getAttribute("data-lsrc") || "";
-    if (!/^(https?:|data:image\/)/.test(s) && el.getAttribute("srcset")) {
+    if (!/^https?:/.test(s) && el.getAttribute("srcset")) {
       const parts = el.getAttribute("srcset").split(",").map((x) => x.trim().split(/\s+/)[0]);
       s = parts[parts.length - 1] || s;
     }
     return s;
   }
   function usableImg(s, w, h) {
-    if (!/^(https?:|data:image\/)/.test(s)) return false;
+    if (!/^https?:/.test(s)) return false;
     if (/gstatic\.com\/(faviconV2|images\/branding)|\/branding\/|googlelogo|avatar|profile-picture/i.test(s)) return false;
     if ((w && w < 40) || (h && h < 40)) return false;
     return true;
@@ -224,7 +229,7 @@ function scrapeConversation() {
       images.push({ src: s, alt: (im.alt || "").replace(/[\[\]\n]/g, " ").trim() });
     });
     scopeEl.querySelectorAll('[style*="background-image"]').forEach((el) => {
-      const m = /url\(["']?((?:https?:|data:image\/)[^"')]+)["']?\)/.exec(el.getAttribute("style") || "");
+      const m = /url\(["']?(https?:[^"')]+)["']?\)/.exec(el.getAttribute("style") || "");
       if (!m || imgSeen.has(m[1])) return;
       const r = el.getBoundingClientRect();
       if (r.width < 40 || r.height < 40) return;

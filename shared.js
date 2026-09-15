@@ -14,14 +14,18 @@ async function discoverModels(apiKey) {
     .map((m) => m.name.replace(/^models\//, ""))
     .filter((n) => /^gemini/i.test(n) && !/embedding|aqa|vision|image|tts|audio|gemma/i.test(n));
 
+  // "lite" models have the smallest footprint and, empirically, the most
+  // generous free-tier quota — prefer them over plain/"pro" siblings rather
+  // than treating them as a lesser variant.
   const score = (n) => {
     let s = 0;
     if (/-latest$/.test(n)) s += 1000;
     const ver = parseFloat((n.match(/gemini-(\d+(?:\.\d+)?)/) || [])[1] || "0");
     s += ver * 10;
+    if (/lite/.test(n)) s += 6;
     if (/flash/.test(n)) s += 5;
     if (/pro/.test(n)) s += 3;
-    if (/lite|-8b|thinking|preview|-exp|\d{6,}/.test(n)) s -= 8;
+    if (/-8b|thinking|preview|-exp|\d{6,}/.test(n)) s -= 8;
     return s;
   };
   return [...new Set(names)].sort((a, b) => score(b) - score(a)).slice(0, 8);

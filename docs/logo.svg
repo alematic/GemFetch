@@ -58,5 +58,5 @@
 
   <!-- wordmark -->
   <text x="170" y="98" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="46" font-weight="800" fill="#ffffff">GemFetch</text>
-  <text x="172" y="124" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="15" fill="#e6edff">one click: AI chat → tidy Markdown</text>
+  <text x="172" y="124" font-family="Segoe UI, system-ui, -apple-system, sans-serif" font-size="15" fill="#e6edff">one click: AI chat to tidy Markdown</text>
 </svg>

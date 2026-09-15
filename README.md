@@ -103,7 +103,11 @@ Pick a **"flash"** model in Settings (Refresh loads what your key can use) —
 they have the most generous free allowance. If you see `429` errors:
 
 - Wait a minute (GemFetch auto-retries once) — per-minute limits reset fast.
-- Prefer a lighter "flash" model; "pro" and newest-preview models have much smaller free quotas.
+- Prefer a **"flash-lite"** model — it has the most generous free quota (confirmed
+  in practice: "pro" ran out immediately, plain "flash" also got rate-limited,
+  "flash-lite (latest)" worked). GemFetch's model discovery now ranks lite
+  variants first for this reason. "pro" and newest-preview models are the most
+  quota-restricted.
 - For heavy use, enable **billing** on the key's Google Cloud project
   (console.cloud.google.com → Billing). A consumer *Gemini Advanced / Pro*
   subscription does **not** raise API limits — only Cloud billing does.
