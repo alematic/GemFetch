@@ -1,4 +1,8 @@
-# 💎 GemFetch
+<p align="center">
+  <img src="icons/logo-animated.svg" alt="GemFetch — one click: AI chat to tidy Markdown" width="480">
+</p>
+
+# GemFetch
 
 A tiny Chrome (Manifest V3) extension. Click the icon on a Google **AI Mode /
 AI Overview** result — or a **ChatGPT / Claude / Gemini / Perplexity / Copilot**
@@ -132,14 +136,26 @@ comes through messy or truncated, select the part you care about and re-run.
 ## Publishing
 
 See [`STORE_LISTING.md`](STORE_LISTING.md) for the Chrome Web Store draft and the
-pre-submit checklist (icons, versioning, hosted privacy policy). The landing page
-under [`docs/`](docs/) is ready for GitHub Pages — enable it at
-**Settings → Pages → Source: `main` / `docs`**, then it serves at
+pre-submit checklist. Landing page + privacy policy are live via GitHub Pages at
 `https://alematic.github.io/GemFetch/`.
 
-Before going fully public, update the `#install` link in `docs/index.html`
-(and the `STORE_LISTING.md` privacy-policy URL) to the Chrome Web Store URL
-once the listing is live.
+**Steps to submit:**
+
+1. Zip only the extension's runtime files (not `docs/`, `README.md`, `.git`, …):
+   ```powershell
+   Compress-Archive -Force -DestinationPath gemfetch.zip -Path manifest.json,background.js,shared.js,scrape.js,popup.html,popup.js,options.html,options.js,icons
+   ```
+2. [chrome.google.com/webstore/devconsole](https://chrome.google.com/webstore/devconsole/)
+   → **New item** → upload `gemfetch.zip`.
+3. Fill the listing from `STORE_LISTING.md` (summary, description, category);
+   upload 1–2 screenshots; paste the Privacy policy URL above; fill the
+   **Privacy practices** tab from the same file (permission justifications).
+4. Submit for review (typically a few days to ~2 weeks for a new item).
+5. Once approved, update `docs/index.html`'s `#install` link (the "Get the
+   extension" button) to the real Web Store URL, and redeploy Pages.
+
+For any future update: bump `version` in `manifest.json`, re-zip, and upload a
+new package version from the same dashboard item — no new $5 fee.
 
 ## Contributing
 

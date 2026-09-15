@@ -58,8 +58,7 @@ free tier is rate-limited; heavy users can enable billing on their own key.
 - **Remote code:** No.
 - **Data collected / sold / transferred:** None by the developer. Page text is
   sent to Google's API under the user's own key; nothing is sent to the developer.
-- **Privacy policy URL:** TODO — `https://alematic.github.io/GemFetch/privacy.html`
-  (or link the repo's PRIVACY.md raw URL).
+- **Privacy policy URL:** `https://alematic.github.io/GemFetch/privacy.html`
 
 ---
 
@@ -75,6 +74,8 @@ free tier is rate-limited; heavy users can enable billing on their own key.
 ## Before submitting — code checklist
 
 - [x] Icons set (16/32/48/128) wired into `manifest.json`.
+- [x] Host the privacy policy at a public URL (GitHub Pages is live).
 - [ ] Bump `version` in `manifest.json` for each upload.
-- [ ] Host the privacy policy at a public URL.
+- [ ] Screenshots (see above).
+- [ ] Zip just the extension's runtime files (see README → Publishing).
 - [ ] Test on a fresh Chrome profile (no cached permissions).
