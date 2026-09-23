@@ -28,12 +28,46 @@ async function discoverModels(apiKey) {
     if (/-8b|thinking|preview|-exp|\d{6,}/.test(n)) s -= 8;
     return s;
   };
-  return [...new Set(names)].sort((a, b) => score(b) - score(a)).slice(0, 8);
+  // Keep a deep-ish list: the penalty above buries a brand-new model that ships
+  // as a dated preview, and summarizeWithFallback needs spare candidates to hop to.
+  return [...new Set(names)].sort((a, b) => score(b) - score(a)).slice(0, 12);
 }
 
 function suggestedReplacement(text) {
   const m = (text || "").match(/use\s+models\/([A-Za-z0-9._-]+)/);
   return m ? m[1] : null;
+}
+
+// The model list rots — Google adds and retires ids every few months — so
+// re-discover it when it is missing OR stale, not only when it was never set.
+const MODEL_LIST_TTL = 7 * 24 * 60 * 60 * 1000;
+function modelListStale(cfg) {
+  return !((cfg && cfg.modelList) || []).length || Date.now() - ((cfg && cfg.modelListTs) || 0) > MODEL_LIST_TTL;
+}
+
+// Pull the useful bits out of a Gemini error body. quotaId is what separates
+// "wait a few seconds" (…PerMinute…) from "this model is done for today"
+// (…PerDay…) — worth knowing before we either sleep or switch models.
+function apiError(text) {
+  let j = null;
+  try {
+    j = JSON.parse(text || "");
+  } catch (e) {
+    /* not JSON — fall through to the raw text */
+  }
+  const details = j?.error?.details || [];
+  const v = details.flatMap((d) => d.violations || []).find((x) => x.quotaId || x.quotaMetric) || {};
+  const retry = details.find((d) => /RetryInfo/.test(d["@type"] || ""));
+  const delay = ((retry && retry.retryDelay) || "").match(/(\d+)/);
+  const quotaId = v.quotaId || "";
+  return {
+    message: j?.error?.message || (text || "").slice(0, 200),
+    quotaId,
+    perDay: /PerDay/i.test(quotaId),
+    perMinute: /PerMinute/i.test(quotaId),
+    limit: v.quotaValue || "",
+    retryDelay: delay ? +delay[1] : null,
+  };
 }
 
 // --- formatting --------------------------------------------------------------
@@ -139,8 +173,12 @@ async function synthesize(apiKey, model, data, customPrompt, signal) {
     generationConfig: { temperature: 0.3 },
   };
 
-  let r, raw;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  // Retry only what is actually transient: a per-minute 429 clears in seconds,
+  // an overloaded model (500/503) usually clears on the next try. A per-day 429
+  // will not clear at all, so stop immediately and let the caller switch models.
+  const MAX_TRIES = 3;
+  let r, raw, waited = false;
+  for (let attempt = 1; attempt <= MAX_TRIES; attempt++) {
     r = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -148,18 +186,42 @@ async function synthesize(apiKey, model, data, customPrompt, signal) {
       signal,
     });
     raw = await r.text();
-    if (r.status === 429 && attempt === 0) {
-      const m = raw.match(/"retryDelay":\s*"(\d+)s"/);
-      const wait = m ? Math.min(+m[1] + 1, 30) : 20;
-      await _abortableSleep(wait * 1000, signal);
+    if (r.ok || attempt === MAX_TRIES) break;
+    if (r.status === 429) {
+      const q = apiError(raw);
+      if (q.perDay || waited) break;
+      waited = true;
+      await _abortableSleep(Math.min((q.retryDelay ?? 20) + 1, 30) * 1000, signal);
       continue;
     }
-    break;
+    if (r.status === 500 || r.status === 503) {
+      await _abortableSleep(attempt * 3000, signal);
+      continue;
+    }
+    break; // 400 / 403 / 404 — retrying changes nothing
   }
-  if (r.status === 429)
-    throw new Error(
-      "Free-tier quota exhausted for this model. Wait a minute, pick a lighter 'flash' model in Settings, or add billing to the key.",
+
+  if (r.status === 429) {
+    const q = apiError(raw);
+    const err = new Error(
+      q.perDay
+        ? `Daily free-tier quota for ${model} is used up${q.limit ? ` (limit ${q.limit}/day)` : ""}.`
+        : q.perMinute
+          ? `Per-minute rate limit on ${model}, still limited after a retry.`
+          : `${model} is rate-limited (429). ${q.message}`,
     );
+    err.rateLimited = true;
+    err.perDay = q.perDay;
+    err.quotaId = q.quotaId;
+    throw err;
+  }
+  if (r.status === 500 || r.status === 503) {
+    const err = new Error(
+      `${model} is overloaded or unavailable (${r.status}) — Google's capacity, not your quota. ${apiError(raw).message}`,
+    );
+    err.overloaded = true;
+    throw err;
+  }
   if (r.status === 404) {
     const err = new Error(raw.slice(0, 300));
     err.notFound = true;
@@ -205,30 +267,56 @@ async function synthesize(apiKey, model, data, customPrompt, signal) {
   return { title, synthesis, conversation };
 }
 
-// Try the configured model; on a 404 (retired) switch to Google's suggested
-// replacement or the top discoverable model, persist it, and retry once.
+// Try the configured model, then hop to another discoverable one. All three
+// triggers are per-model — a retired id (404), a used-up daily quota, and an
+// overloaded model — so a sibling flash/lite model normally just works.
+// Anything else (bad key, 400, abort) is not a model problem: rethrow it.
 async function summarizeWithFallback(cfg, data, signal) {
+  let list = Array.isArray(cfg.modelList) ? [...cfg.modelList] : [];
   let model = cfg.model || "";
   if (!model) {
-    const list = await discoverModels(cfg.apiKey).catch(() => []);
+    if (!list.length) list = await discoverModels(cfg.apiKey).catch(() => []);
     model = list[0] || "gemini-flash-latest";
-    await chrome.storage.local.set({ model, modelList: list });
+    await chrome.storage.local.set({ model, modelList: list, modelListTs: Date.now() });
   }
-  try {
-    return await synthesize(cfg.apiKey, model, data, cfg.customPrompt, signal);
-  } catch (e) {
-    if (!e.notFound) throw e;
-    let next = e.replacement;
-    if (!next) {
-      const list = await discoverModels(cfg.apiKey);
-      await chrome.storage.local.set({ modelList: list });
-      next = list.find((m) => /flash/.test(m)) || list[0];
+
+  const tried = [];
+  let firstErr = null;
+  let durable = false; // a 404 or a spent daily quota is worth remembering; an overload is not
+
+  for (let hop = 0; hop < 3; hop++) {
+    tried.push(model);
+    try {
+      const out = await synthesize(cfg.apiKey, model, data, cfg.customPrompt, signal);
+      if (hop > 0 && durable) await chrome.storage.local.set({ model });
+      return { ...out, model, fellBackFrom: hop > 0 ? tried[0] : "" };
+    } catch (e) {
+      if (!(e.notFound || e.perDay || e.overloaded)) throw e;
+      firstErr = firstErr || e;
+      durable = durable || !!(e.notFound || e.perDay);
+      // A 404 proves the cached list still holds a retired id — force the next
+      // popup/Settings open to re-discover, even if we recover via `replacement`.
+      if (e.notFound) await chrome.storage.local.set({ modelListTs: 0 });
+
+      let next = e.replacement && !tried.includes(e.replacement) ? e.replacement : "";
+      if (!next) {
+        // A retired id means our cached list is wrong; re-discover before hopping.
+        if (!list.length || e.notFound) {
+          list = await discoverModels(cfg.apiKey).catch(() => list);
+          await chrome.storage.local.set({ modelList: list, modelListTs: Date.now() });
+        }
+        next =
+          list.find((m) => !tried.includes(m) && /flash|lite/.test(m)) ||
+          list.find((m) => !tried.includes(m)) ||
+          "";
+      }
+      if (!next) break;
+      model = next;
     }
-    if (!next || next === model)
-      throw new Error("This model was retired and no replacement was found. Open Settings → Refresh.");
-    await chrome.storage.local.set({ model: next });
-    return await synthesize(cfg.apiKey, next, data, cfg.customPrompt, signal);
   }
+  throw new Error(
+    `${firstErr.message} Tried ${tried.join(", ")}. Open Settings → Refresh for a current model list, or add billing to the key.`,
+  );
 }
 
 // --- Markdown assembly ----------------------------------------------------

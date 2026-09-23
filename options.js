@@ -17,7 +17,7 @@ function fillModels(list, selected) {
 
 async function load() {
   const cfg = await chrome.storage.local.get([
-    "apiKey", "model", "modelList", "customPrompt", "downloadDir", "autoSave",
+    "apiKey", "model", "modelList", "modelListTs", "customPrompt", "downloadDir", "autoSave",
     "useGroups", "defaultGroup", "archiveGroup",
   ]);
   $("key").value = cfg.apiKey || "";
@@ -28,7 +28,7 @@ async function load() {
   $("defaultGroup").value = cfg.defaultGroup || "Inbox";
   $("archiveGroup").value = cfg.archiveGroup || "Archive";
   fillModels(cfg.modelList || [], cfg.model || "");
-  if (cfg.apiKey && !(cfg.modelList || []).length) refresh();
+  if (cfg.apiKey && modelListStale(cfg)) refresh();
 }
 
 async function refresh() {
@@ -37,7 +37,7 @@ async function refresh() {
   $("status").textContent = "Loading models…";
   try {
     const list = await discoverModels(apiKey);
-    await chrome.storage.local.set({ modelList: list });
+    await chrome.storage.local.set({ modelList: list, modelListTs: Date.now() });
     fillModels(list, $("model").value || list[0]);
     $("status").textContent = `Loaded ${list.length} models.`;
   } catch (e) {

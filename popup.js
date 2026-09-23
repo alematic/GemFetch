@@ -231,7 +231,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 async function init() {
   CFG = await chrome.storage.local.get([
-    "apiKey", "model", "modelList", "customPrompt", "downloadDir", "autoSave",
+    "apiKey", "model", "modelList", "modelListTs", "customPrompt", "downloadDir", "autoSave",
     "useGroups", "defaultGroup", "archiveGroup",
   ]);
   [TAB] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -242,13 +242,13 @@ async function init() {
     return;
   }
 
-  if (!(CFG.modelList || []).length) {
-    // Best-effort background refresh so the picker isn't stuck on one model
+  if (modelListStale(CFG)) {
+    // Best-effort background refresh so the picker isn't stuck on a stale list
     // just because Settings → Refresh was never clicked.
     discoverModels(CFG.apiKey)
       .then((list) => {
         CFG.modelList = list;
-        chrome.storage.local.set({ modelList: list });
+        chrome.storage.local.set({ modelList: list, modelListTs: Date.now() });
         populateModelSelect();
       })
       .catch(() => {});

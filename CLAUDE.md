@@ -141,7 +141,9 @@ then `## Images` (prompt + answer images not already inline) and `## Sources`.
 
 ## Settings keys (`chrome.storage.local`)
 
-`apiKey`, `model`, `modelList[]`, `customPrompt`, `downloadDir` (default `GemFetch`),
+`apiKey`, `model`, `modelList[]`, `modelListTs` (ms epoch of the last successful
+`discoverModels`; the list is re-discovered when missing or older than 7 days —
+`modelListStale()`), `customPrompt`, `downloadDir` (default `GemFetch`),
 `autoSave` (bool), `useGroups` (bool), `defaultGroup` (default `Inbox`),
 `archiveGroup` (default `Archive`), `recent[]` (last 12, each with `md` text),
 `job` (current/last job state).

@@ -134,6 +134,8 @@ async function _runSummarize({ scrapeData, group, tabId, model }) {
   let out, warn = "";
   try {
     out = await summarizeWithFallback(cfg, scrapeData, ABORT.signal);
+    if (out.fellBackFrom)
+      warn = `${out.fellBackFrom} was unavailable — used ${out.model} instead.`;
   } catch (e) {
     if (e && e.name === "AbortError") {
       await patchJob({ phase: "cancelled" });
