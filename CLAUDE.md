@@ -29,7 +29,7 @@ No build step, no framework, no dependencies, no bundler. Plain ES loaded as
 |---|---|
 | `manifest.json` | MV3. Permissions: `activeTab`, `scripting`, `storage`, `tabs`, `tabGroups`, `downloads`. Host permission: `generativelanguage.googleapis.com` only. Has a `background.service_worker`. **Bump `version` on every Web Store upload.** |
 | `shared.js` | Core with **no DOM / no `window`**. Loaded by `popup.html`, `options.html`, and `background.js` (via `importScripts`). Contains: `discoverModels`, `suggestedReplacement`, `slug`, `datePrefix`, `safeSegment`, the Gemini `PROMPT`, `synthesize`, `summarizeWithFallback`, `buildMarkdown`. |
-| `scrape.js` | A single self-contained function `scrapeConversation()` injected into the active tab via `chrome.scripting.executeScript({func})`. Must not reference anything outside itself. Walks the DOM → Markdown. Has a site registry (ChatGPT, Claude, Gemini, Perplexity, Copilot, Grok, Poe, Le Chat, DeepSeek, You.com), Google AI Mode / AI Overview branches, and a generic `<main>`/`<article>` fallback. A text selection > 40 chars always wins. Returns `{ url, query, mode, markdown, sources[], images[] }`. |
+| `scrape.js` | A single self-contained function `scrapeConversation()` injected into the active tab via `chrome.scripting.executeScript({func})`. Must not reference anything outside itself. Walks the DOM → Markdown. Has a site registry (ChatGPT, Claude, Gemini, Perplexity, Copilot, Grok, Poe, Le Chat, DeepSeek, You.com), Google AI Mode / AI Overview branches, and a generic `<main>`/`<article>` fallback. A text selection > 40 chars always wins. Returns `{ url, query, mode, markdown, sources[], images[] }`, where each `images[]` entry is `{ src, alt, kind: "prompt"\|"answer"\|"source" }` (prompt/answer entries first, then source; at most 10 prompt+answer + 2 source). |
 | `background.js` | Service worker. Runs the slow work (Gemini call + file download) so it **survives the popup closing**. Job state lives in `chrome.storage.local.job`. Keep-alive `setInterval` while a job runs. Owns `downloadMarkdown` + the `downloads.onDeterminingFilename` listener. |
 | `popup.js` / `popup.html` | Toolbar popup. Has its own model `<select>` at the top (populated from cached `modelList`, or a background `discoverModels()` call if empty) so the model can be changed per-run without opening Settings; the choice is sent explicitly with the `"summarize"` message and persisted as the new default. Kicks off a job, shows progress, lets the user edit title/synthesis and Save, lists recent saves (Show / → Archive / NotesMD). Driven by `chrome.storage.onChanged` on the `job` key. Uses `discoverModels` from `shared.js`, nothing else from it. |
 | `options.js` / `options.html` | Settings: API key, model (+ Refresh to re-discover), Save folder (Downloads subfolder), auto-save, tab-group foldering, group/archive names, extra prompt instructions. Top of page: Website / GitHub / Donate links. Bottom: a **Feedback** form — no backend, it builds a `mailto:` link and opens it via `chrome.tabs.create`. |
@@ -67,8 +67,11 @@ a fresh job.
 
 Output file: `<Downloads>/<saveFolder>/[<group>/]YYMMDD-<title-slug>.md` with
 YAML front-matter (`title, source, group?, query, saved`), an `[↗ Open this chat]`
-link, `## Synthesis`, `## Conversation` (numbered `### Prompt N` / `### Response N`),
-then `## Images` (prompt + answer images not already inline) and `## Sources`.
+link, `## Synthesis`, `## Conversation` (numbered `### Prompt N` / `### Response N`;
+on AI Overview / AI Mode there is no user turn in the DOM, so `buildMarkdown`
+re-inserts the captured search query as `### Prompt 1`),
+then `## Images` (prompt/answer images not already inline, followed by a
+"From cited sources" sub-section for `kind:"source"` thumbnails) and `## Sources`.
 
 ## Hard constraints — do not break these
 
@@ -137,7 +140,7 @@ then `## Images` (prompt + answer images not already inline) and `## Sources`.
   ever needs addressing, add `.gitattributes` (`* text=auto eol=lf`) rather than
   hand-fixing.
 - Shell here is PowerShell for the user; the Bash tool works for POSIX scripts.
-  `gh` is NOT installed — repo/remote operations are done via the GitHub website.
+  `gh` is installed and authenticated as `alematic`.
 
 ## Settings keys (`chrome.storage.local`)
 
@@ -146,18 +149,18 @@ then `## Images` (prompt + answer images not already inline) and `## Sources`.
 `archiveGroup` (default `Archive`), `recent[]` (last 12, each with `md` text),
 `job` (current/last job state).
 
-## Current state (2026-09-15)
+## Current state (2026-10-30)
 
-- Latest: **v2.2.0**. Working end to end for the user (Google AI Mode + web chats).
+- Latest: **v2.2.3** (image classification: prompt/answer/source; AI Overview
+  query re-inserted as Prompt 1). Being submitted to the Chrome Web Store.
 - Assets: `icons/logo-animated.svg` (bouncing/winking gem, README banner + landing
   page hero) and `icons/tip-jar.svg` (gem gulping a coin, next to the PayPal
   button) each have a same-named copy under `docs/` so GitHub Pages can serve
   them — keep both copies in sync if you edit one.
 - `screenshots/` is gitignored — a local staging folder for Web Store shots, not
-  auto-shipped. The two currently there (`extensions.png`, `ai-search.png`) are
-  NOT store-ready (one shows unrelated third-party extensions, the other shows
-  the permissions dropdown, not GemFetch's own popup UI) — still need real
-  popup-editor / Settings screenshots before submitting.
+  auto-shipped. `before-analysis.png`, `after-analysis.png`, `extension.png` are
+  the store shots; they are full-res and must be cropped/scaled to 1280×800
+  before uploading (the Store rejects other sizes).
 - Open follow-ups / ideas not yet done:
   - Web Store submission (needs real screenshots, then upload a zip — see
     README → Publishing for the exact file list and zip command).

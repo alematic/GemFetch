@@ -59,9 +59,13 @@ saved: 2026-08-30T14:32:01.000Z
 2. ...
 ```
 
-Images found in the answer are kept inline (or collected under `## Images` if the
-model drops them). Citation links from the answer are listed under `## Sources`
-as remote URLs — some Google-hosted image URLs and redirect links may expire.
+Only images that belong to the conversation are captured — the ones attached to
+your prompt and the ones in the assistant's answer, plus a couple of thumbnails
+for the top cited sources; unrelated page imagery (ads, avatars, icons) is left
+out. They're kept inline where the model places them, or collected under
+`## Images` if it drops them (source thumbnails are set apart there too).
+Citation links from the answer are listed under `## Sources` as remote URLs —
+some Google-hosted image URLs and redirect links may expire.
 
 - Filename: `YYMMDD-<title-slug>.md` (Chrome adds ` (1)` on collision).
 - Files go to `Downloads / <save folder> /` (default `GemFetch`; set it to

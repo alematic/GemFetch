@@ -81,7 +81,7 @@ REMOVE completely:
 
 KEEP:
 - The full exchange: every user turn and every assistant turn, in order — explanations, lists, tables, code blocks, and inline citation links that belong to the content.
-- Every image, from BOTH the user's prompts and the answers: any Markdown image \`![alt](url)\` in the raw text must appear UNCHANGED and in the same position in your "conversation" output. Never drop, rewrite or invent image URLs.
+- Every image in the raw text: it has already been filtered down to only the images that matter, so keep each Markdown image \`![alt](url)\` UNCHANGED and in the same position in your "conversation" output. Never drop, rewrite, or invent an image URL.
 
 Output PLAIN TEXT in EXACTLY this structure — no JSON, no wrapping code fence, nothing before "TITLE:" and nothing after the conversation:
 
@@ -239,13 +239,38 @@ function buildMarkdown(title, synthLines, data, conversation, groupName) {
     .map((s) => s.trim().replace(/^[-*]\s*/, ""))
     .filter(Boolean);
 
+  // Google AI Overview / AI Mode have no user turn in the DOM — the question
+  // only lives in the search box, so the model correctly emits "### Response 1"
+  // on its own. We still know what was asked, so put it back as the prompt
+  // instead of leaving it buried in the front-matter.
+  const query = (data.query || "").trim();
+  const convo =
+    query && !/^###\s*Prompt\b/im.test(conversation)
+      ? "### Prompt 1\n\n" + query + "\n\n" + conversation
+      : conversation;
+
+  const imgLine = (im, fallbackAlt) =>
+    `![${(im.alt || fallbackAlt || "").replace(/[\[\]]/g, "")}](${im.src})`;
+
   const imgs = Array.isArray(data.images) ? data.images : [];
-  const missing = imgs.filter((im) => !conversation.includes(im.src));
-  const imagesBlock = missing.length
-    ? `\n\n## Images\n\n` +
-      missing.map((im) => `![${(im.alt || "").replace(/[\[\]]/g, "")}](${im.src})`).join("\n\n") +
-      "\n"
-    : "";
+  const missing = imgs.filter((im) => !convo.includes(im.src));
+  // Old-shape jobs (persisted before the kind-tagged contract shipped) carry
+  // images with no `kind` at all — treat those as "answer", not as vanishing.
+  const convoImgs = missing.filter((im) => (im.kind || "answer") !== "source");
+  const sourceImgs = missing.filter((im) => im.kind === "source");
+
+  let imagesBlock = "";
+  if (convoImgs.length || sourceImgs.length) {
+    imagesBlock =
+      `\n\n## Images\n\n` +
+      convoImgs.map((im) => imgLine(im)).join("\n\n") +
+      (convoImgs.length && sourceImgs.length ? "\n\n" : "") +
+      (sourceImgs.length
+        ? `### From cited sources\n\n` +
+          sourceImgs.map((im) => imgLine(im, "Source thumbnail")).join("\n\n")
+        : "") +
+      "\n";
+  }
 
   const src = Array.isArray(data.sources) ? data.sources : [];
   const sourcesBlock = src.length
@@ -268,7 +293,7 @@ function buildMarkdown(title, synthLines, data, conversation, groupName) {
       `---\n\n# ${title}\n\n[↗ Open this chat in your browser](${data.url})\n\n` +
       `## Synthesis\n\n` +
       (bullets.length ? bullets.map((s) => `- ${s}`).join("\n") : "_(none)_") +
-      `\n\n## Conversation\n\n${conversation}\n` +
+      `\n\n## Conversation\n\n${convo}\n` +
       imagesBlock +
       sourcesBlock,
   };

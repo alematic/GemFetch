@@ -43,12 +43,79 @@ function scrapeConversation() {
     }
     return s;
   }
-  function usableImg(s, w, h) {
+  // Junk we never want even when it's big enough to pass the size check:
+  // favicon services, logos/branding, avatars, sprites/icon sheets, badges,
+  // emoji art, and 1x1-style spacer/tracking pixels served over http(s).
+  const JUNK_IMG_RE = /favicon|gstatic\.com\/images\/branding|\/branding\/|googlelogo|\blogos?\b|avatar|profile[-_]?pic|\bsprites?\b|\bicons?\b|\bbadges?\b|emoji|spacer|tracking[-_]?pixel|[/_-]1x1[/._-]/i;
+  function usableImg(s, el) {
     if (!/^https?:/.test(s)) return false;
-    if (/gstatic\.com\/(faviconV2|images\/branding)|\/branding\/|googlelogo|avatar|profile-picture/i.test(s)) return false;
-    if ((w && w < 40) || (h && h < 40)) return false;
-    return true;
+    if (JUNK_IMG_RE.test(s)) return false;
+    // naturalWidth/naturalHeight are 0 until the image has actually loaded,
+    // which would let un-loaded placeholders slip through a natural-size
+    // check. The rendered box (present the moment layout has happened) is
+    // the reliable signal, and a 0x0 box (not laid out yet) is rejected too.
+    // Floor kept modest: prompt attachments render as fairly small chips on
+    // some assistants, and dropping those would defeat the point.
+    const r = el.getBoundingClientRect();
+    return r.width >= 48 && r.height >= 48;
   }
+
+  // ---- image classification: prompt attachment vs. answer body vs. source card ----
+  const CHROME_TAG = new Set(["nav", "aside", "header", "footer"]);
+  const CHROME_ROLE = /^(navigation|complementary|banner|contentinfo|toolbar|tablist|menu)$/;
+  const RELATED_TEXT_RE = /related search|people also ask|suggested|follow[- ]?up/i;
+  // Small best-effort registry of "this is a user turn" markers, in the same
+  // spirit as the site registry below — not exhaustive, just cheap and forgiving.
+  const USER_TURN_SEL =
+    '[data-message-author-role="user"], [data-testid="user-message"], ' +
+    '[class*="user-turn" i], [class*="user-message" i], [data-role="user"]';
+  function looksLikeRelatedBlock(node) {
+    const label = (node.getAttribute && node.getAttribute("aria-label")) || "";
+    if (RELATED_TEXT_RE.test(label)) return true;
+    const h = node.querySelector && node.querySelector("h1,h2,h3,h4");
+    return !!(h && h.parentElement === node && RELATED_TEXT_RE.test(h.textContent || ""));
+  }
+  // Walk from an <img> (or background-image element) up to the captured
+  // scope, classifying it as "prompt", "answer", "source", or null (drop).
+  function describeImg(el, scope) {
+    let userTurn = false;
+    let chip = false;
+    let sourceHref = null;
+    let node = el;
+    while (node && node !== scope) {
+      const tag = node.tagName ? node.tagName.toLowerCase() : "";
+      if (CHROME_TAG.has(tag)) return { kind: null };
+      const role = node.getAttribute && node.getAttribute("role");
+      if (role && CHROME_ROLE.test(role)) return { kind: null };
+      if (looksLikeRelatedBlock(node)) return { kind: null };
+      if (node.matches && node.matches(USER_TURN_SEL)) userTurn = true;
+      // Assistants render prompt attachments as image chips inside a <button>.
+      if (tag === "button" && node.querySelector("img")) chip = true;
+      // An image sitting inside a link to a DIFFERENT site than the page
+      // itself is the reliable signature of a source/citation card thumbnail
+      // (favicon, publisher logo, article art) rather than an image the
+      // assistant actually put in its own answer.
+      if (!sourceHref && tag === "a" && node.hasAttribute("href")) {
+        const resolved = realUrl(node.getAttribute("href") || "");
+        let h = "";
+        try { h = new URL(resolved, location.href).hostname.replace(/^www\./, ""); } catch (e) {}
+        if (h && h !== HOST) sourceHref = resolved;
+      }
+      node = node.parentElement;
+    }
+    // An explicit user-turn marker beats everything else. Failing that, the
+    // external link wins over the button-chip guess — plenty of sites wrap a
+    // citation thumbnail in a <button> too, and calling one a prompt
+    // attachment would inline it into the note, which is the bug we are fixing.
+    if (userTurn) return { kind: "prompt", sourceHref: null };
+    if (sourceHref) return { kind: "source", sourceHref };
+    if (chip) return { kind: "prompt", sourceHref: null };
+    return { kind: "answer", sourceHref: null };
+  }
+
+  // The same picture is often served at two CDN sizes within one answer;
+  // without this it gets inlined twice and reads as a duplicate in the note.
+  const inlineSeen = new Set();
 
   function blockMd(el, depth) {
     depth = depth || 0;
@@ -102,8 +169,18 @@ function scrapeConversation() {
         out += "```\n" + codeText + "\n```\n\n";
       } else if (tag === "img") {
         const src = imgSrc(c);
-        if (usableImg(src, c.naturalWidth || c.width, c.naturalHeight || c.height)) {
-          out += `![${(c.alt || "").replace(/[\[\]\n]/g, " ").trim()}](${src})\n\n`;
+        // Only prompt attachments and images the assistant put in its own
+        // answer get inlined — source-card thumbnails and dropped chrome
+        // must never appear as literal `![]()` lines (Gemini is told to
+        // preserve every such line verbatim, so anything inline ends up
+        // in the saved note no matter what it actually is).
+        if (usableImg(src, c)) {
+          const kind = describeImg(c, scopeEl).kind;
+          const key = normImgUrl(src);
+          if ((kind === "prompt" || kind === "answer") && !inlineSeen.has(key)) {
+            inlineSeen.add(key);
+            out += `![${(c.alt || "").replace(/[\[\]\n]/g, " ").trim()}](${src})\n\n`;
+          }
         }
       } else if (["p","div","section","article","span","main","li","figure","details"].includes(tag)) {
         if (c.querySelector("h1,h2,h3,h4,h5,h6,ul,ol,p,table,pre,img")) {
@@ -217,26 +294,74 @@ function scrapeConversation() {
     });
   }
 
-  // --- images: prompt attachments AND answer images -------------------
-  const images = [];
+  // --- images: prompt attachments, answer images, and a couple of source thumbnails ---
+  // Strip query/hash before comparing so the same picture served at two
+  // sizes (e.g. a CDN width param) isn't listed twice; the full original
+  // URL is still what gets stored.
+  function normImgUrl(u) {
+    try {
+      const x = new URL(u, location.href);
+      x.search = "";
+      x.hash = "";
+      return x.href;
+    } catch (e) {
+      return u.split(/[?#]/)[0];
+    }
+  }
+  const promptAnswerImgs = [];
+  const sourceCandidates = []; // { src, alt, href } — href is the citation link it sat inside
   const imgSeen = new Set();
   if (scopeEl) {
     scopeEl.querySelectorAll("img").forEach((im) => {
       const s = imgSrc(im);
-      if (!usableImg(s, im.naturalWidth || im.width, im.naturalHeight || im.height)) return;
-      if (imgSeen.has(s)) return;
-      imgSeen.add(s);
-      images.push({ src: s, alt: (im.alt || "").replace(/[\[\]\n]/g, " ").trim() });
+      if (!usableImg(s, im)) return;
+      const { kind, sourceHref } = describeImg(im, scopeEl);
+      if (!kind) return;
+      const key = normImgUrl(s);
+      if (imgSeen.has(key)) return;
+      imgSeen.add(key);
+      const alt = (im.alt || "").replace(/[\[\]\n]/g, " ").trim();
+      if (kind === "source") sourceCandidates.push({ src: s, alt, href: sourceHref });
+      else promptAnswerImgs.push({ src: s, alt, kind });
     });
+    // Background-image tiles are almost always decorative UI (carousels,
+    // related-content cards); only keep ones that land in the answer body,
+    // routed through the same classifier so this can never disagree with
+    // the <img> pass above.
     scopeEl.querySelectorAll('[style*="background-image"]').forEach((el) => {
       const m = /url\(["']?(https?:[^"')]+)["']?\)/.exec(el.getAttribute("style") || "");
-      if (!m || imgSeen.has(m[1])) return;
-      const r = el.getBoundingClientRect();
-      if (r.width < 40 || r.height < 40) return;
-      imgSeen.add(m[1]);
-      images.push({ src: m[1], alt: (el.getAttribute("aria-label") || "").trim() });
+      if (!m) return;
+      const s = m[1];
+      if (!usableImg(s, el)) return;
+      if (describeImg(el, scopeEl).kind !== "answer") return;
+      const key = normImgUrl(s);
+      if (imgSeen.has(key)) return;
+      imgSeen.add(key);
+      promptAnswerImgs.push({ src: s, alt: (el.getAttribute("aria-label") || "").replace(/[\[\]\n]/g, " ").trim(), kind: "answer" });
     });
   }
+  // Prompt entries first, then answer — stable sort keeps document order
+  // within each group — capped at 10 combined.
+  promptAnswerImgs.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "prompt" ? -1 : 1));
+  const cappedPromptAnswer = promptAnswerImgs.slice(0, 10).map(({ src, alt, kind }) => ({ src, alt, kind }));
+
+  // For sources, prefer thumbnails that belong to the first few sources[]
+  // entries (matched on the same realUrl() normalisation used to build that
+  // list) so the pair shown is actually representative; fall back to the
+  // first 2 usable source-classified images in document order otherwise.
+  const topSourceUrls = sources.slice(0, 5).map((s) => normImgUrl(s.url));
+  const chosenSources = [];
+  sourceCandidates.forEach((cand) => {
+    if (chosenSources.length >= 2 || !cand.href) return;
+    if (topSourceUrls.includes(normImgUrl(cand.href))) chosenSources.push(cand);
+  });
+  sourceCandidates.forEach((cand) => {
+    if (chosenSources.length >= 2 || chosenSources.includes(cand)) return;
+    chosenSources.push(cand);
+  });
+  const images = cappedPromptAnswer.concat(
+    chosenSources.slice(0, 2).map(({ src, alt }) => ({ src, alt, kind: "source" })),
+  );
 
   return {
     url,
@@ -244,6 +369,6 @@ function scrapeConversation() {
     mode,
     markdown: clean(markdown),
     sources: sources.slice(0, 25),
-    images: images.slice(0, 20),
+    images,
   };
 }
