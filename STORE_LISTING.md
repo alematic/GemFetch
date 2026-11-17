@@ -8,7 +8,7 @@ https://chrome.google.com/webstore/devconsole (one-time $5 registration).
 **Name:** GemFetch
 
 **Summary (132 char max):**
-Save any AI chat (Google AI Mode, ChatGPT, Claude, Gemini, Perplexity…) as clean Markdown — title, synthesis, transcript — in one click.
+Save a conversation with an AI assistant as a clean Markdown note — title, synthesis and transcript — in one click.
 
 **Category:** Productivity
 
@@ -23,27 +23,21 @@ Chrome Web Store page):
 
 ## Detailed description
 
-GemFetch turns an AI assistant conversation — Google AI Mode / AI Overview,
-ChatGPT, Claude, Gemini, Perplexity, Copilot and more — into a tidy Markdown
-note on your computer, in one click.
+> Rejected 2026-11-17 for "keyword spam" (Yellow Argon) because the first
+> version listed many assistant brand names. Keep brand names out of the
+> summary and description. Plain text only: the store does not render Markdown.
 
-• **One click, one file.** Click the toolbar button, glance at the auto-generated
-  title and bullet-point synthesis, hit Save.
-• **Cleaned up.** GemFetch uses the Gemini API (with your own free key) to strip
-  buttons, follow-up chips, disclaimers and filler, and to rewrite the exchange
-  as readable Markdown.
-• **Your folder, no prompts.** Files land in a subfolder of your Downloads,
-  named `YYMMDD-title.md`. No folder-access permission is ever requested.
-• **Runs in the background.** Start it and close the popup; the analysis
-  finishes on its own. Turn on auto-save for zero-touch capture.
-• **Organised.** Optionally an extra subfolder per Chrome tab group, plus an
-  Archive button on recent notes.
-• **Private by design.** Your API key and settings never leave your browser.
-  The only network request is the summarization call to Google, using your key.
-  No analytics, no servers, no tracking. Open source (MIT).
+GemFetch turns a conversation with a web-based AI assistant into a tidy Markdown note on your computer, in one click.
 
-**You need a free Google AI Studio API key** (aistudio.google.com/apikey). The
-free tier is rate-limited; heavy users can enable billing on their own key.
+• One click, one file. Click the toolbar button, glance at the auto-generated title and bullet-point synthesis, hit Save.
+• Cleaned up. GemFetch uses the Gemini API (with your own free key) to strip buttons, suggestion chips, disclaimers and filler, and to rewrite the exchange as readable Markdown.
+• Works on most chat pages. If a page isn't recognised, select the text you want and click the button; your selection is saved instead.
+• Your folder, no prompts. Files land in a subfolder of your Downloads, named YYMMDD-title.md. No folder-access permission is ever requested.
+• Runs in the background. Start it and close the popup; the analysis finishes on its own. Turn on auto-save for zero-touch capture.
+• Organised. Optionally an extra subfolder per Chrome tab group, plus an Archive button on recent notes.
+• Private by design. Your API key and settings never leave your browser. The only network request is the summarization call to Google, using your key. No analytics, no servers, no tracking. Open source (MIT).
+
+You need a free Google AI Studio API key (aistudio.google.com/apikey). The free tier is rate-limited; heavy users can enable billing on their own key.
 
 ---
 

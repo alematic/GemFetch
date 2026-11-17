@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "GemFetch",
-  "version": "2.2.3",
-  "description": "Save an AI chat (Google AI Mode/Overview, ChatGPT, Claude, Gemini, Perplexity…) as clean Markdown into a Downloads subfolder.",
+  "version": "2.2.4",
+  "description": "Save a conversation with an AI assistant as a clean Markdown note (title, synthesis, transcript) in your Downloads folder.",
   "permissions": ["activeTab", "scripting", "storage", "tabs", "tabGroups", "downloads"],
   "host_permissions": ["https://generativelanguage.googleapis.com/*"],
   "background": { "service_worker": "background.js" },
