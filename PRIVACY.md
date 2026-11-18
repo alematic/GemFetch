@@ -42,7 +42,7 @@ as a Markdown file on your computer.
 | `activeTab` + `scripting` | Read the current page's text — only the tab you clicked the button on. |
 | `storage` | Save your settings and recent-saves list locally. |
 | `downloads` | Write the Markdown file into a Downloads subfolder, and reveal it when you click "Show". |
-| `tabs`, `tabGroups` | Read the current tab's Chrome tab-group name to choose a subfolder. |
+| `tabGroups` | Read the current tab's Chrome tab-group name to choose a subfolder. |
 | host access to `generativelanguage.googleapis.com` | Call the Gemini API with your key. |
 
 ## Contact

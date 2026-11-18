@@ -51,7 +51,10 @@ You need a free Google AI Studio API key (aistudio.google.com/apikey). The free 
   - `storage`: store the user's settings and recent-saves list locally.
   - `downloads`: write the generated Markdown file into a Downloads subfolder,
     and reveal it in the OS file manager when the user clicks "Show".
-  - `tabs` / `tabGroups`: read the active tab's tab-group name for foldering.
+  - `tabGroups`: read the name of the Chrome tab group the current tab belongs
+    to, so the note can optionally go into a matching subfolder (off by default).
+  - No `tabs` permission (removed in v2.2.5 after the "Purple Potassium"
+    rejection): only the active tab's id and groupId are used, which need no permission.
   - Host `generativelanguage.googleapis.com`: send page text to the Gemini API
     with the user's key to generate the summary.
 - **Remote code:** No.
